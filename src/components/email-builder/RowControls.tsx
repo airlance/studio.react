@@ -14,8 +14,8 @@ const layouts: { columns: ColumnLayout; icon: React.ElementType; label: string }
 export function RowControls({ onAddRow }: RowControlsProps) {
   return (
     <div className="space-y-1">
-      <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-1 mb-3 mt-6">
-        Layout
+      <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-1 mb-3">
+        Structure
       </h3>
       <div className="space-y-1.5">
         {layouts.map(({ columns, icon: Icon, label }) => (

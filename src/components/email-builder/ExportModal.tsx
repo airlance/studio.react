@@ -9,11 +9,19 @@ interface ExportModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   template: EmailTemplate;
+  includeGoogleFonts?: boolean;
+  fileName?: string;
 }
 
-export function ExportModal({ open, onOpenChange, template }: ExportModalProps) {
+export function ExportModal({
+  open,
+  onOpenChange,
+  template,
+  includeGoogleFonts = true,
+  fileName = 'email-template.html',
+}: ExportModalProps) {
   const [copied, setCopied] = useState(false);
-  const html = exportToHtml(template);
+  const html = exportToHtml(template, { includeGoogleFonts });
 
   const handleCopy = async () => {
     await navigator.clipboard.writeText(html);
@@ -26,7 +34,7 @@ export function ExportModal({ open, onOpenChange, template }: ExportModalProps) 
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'email-template.html';
+    a.download = fileName.trim() ? fileName.trim() : 'email-template.html';
     a.click();
     URL.revokeObjectURL(url);
   };

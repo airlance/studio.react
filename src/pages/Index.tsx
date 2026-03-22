@@ -1,213 +1,390 @@
 import { useState, useEffect, useCallback } from 'react';
-import { DndContext, DragEndEvent, DragStartEvent, DragOverlay, PointerSensor, useSensor, useSensors, closestCenter } from '@dnd-kit/core';
+import {
+    DndContext,
+    DragEndEvent,
+    DragStartEvent,
+    DragOverEvent,
+    DragOverlay,
+    PointerSensor,
+    useSensor,
+    useSensors,
+    closestCenter,
+    pointerWithin,
+    CollisionDetection,
+} from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { useEmailBuilder, createDefaultBlock } from '@/hooks/useEmailBuilder';
 import { BuilderHeader } from '@/components/email-builder/BuilderHeader';
-import { BlockPalette } from '@/components/email-builder/BlockPalette';
-import { RowControls } from '@/components/email-builder/RowControls';
 import { Canvas } from '@/components/email-builder/Canvas';
 import { PropertiesPanel } from '@/components/email-builder/PropertiesPanel';
 import { PreviewModal } from '@/components/email-builder/PreviewModal';
 import { ExportModal } from '@/components/email-builder/ExportModal';
+import { PreviewExportSheet } from '@/components/email-builder/PreviewExportSheet';
+import { EmailBuilderSheet } from '@/components/email-builder/EmailBuilderSheet';
 import { WelcomeScreen } from '@/components/email-builder/WelcomeScreen';
 import { UploadHtmlModal } from '@/components/email-builder/UploadHtmlModal';
 import { AIGenerateModal } from '@/components/email-builder/AIGenerateModal';
 import { TemplatePickerModal } from '@/components/email-builder/TemplatePickerModal';
 import { BlockRenderer } from '@/components/email-builder/BlockRenderer';
+import { ImageEditorModal } from '@/components/email-builder/ImageEditorModal';
+import { LeftSidebar } from '@/components/email-builder/index-page/LeftSidebar';
+import { PaletteDragPreview } from '@/components/email-builder/index-page/PaletteDragPreview';
+import { TranslationProvider } from '@/config/i18n/context';
 import { BlockType, EmailBlock, EmailTemplate } from '@/types/email-builder';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { Button } from '@/components/ui/button';
+import { SlidersHorizontal } from 'lucide-react';
 
 const Index = () => {
-  const builder = useEmailBuilder();
-  const [showPreview, setShowPreview] = useState(false);
-  const [showExport, setShowExport] = useState(false);
-  const [showUpload, setShowUpload] = useState(false);
-  const [showAIGenerate, setShowAIGenerate] = useState(false);
-  const [showTemplates, setShowTemplates] = useState(false);
-  const [dragOverlay, setDragOverlay] = useState<EmailBlock | null>(null);
+    const builder = useEmailBuilder();
+    const {
+        template,
+        selectedBlockId,
+        selectedRowId,
+        setSelectedBlockId,
+        setSelectedRowId,
+        addRow,
+        addBlockToRow,
+        addBlockToCanvas,
+        updateBlock,
+        deleteBlock,
+        deleteRow,
+        moveRow,
+        moveBlock,
+        changeRowColumns,
+        getSelectedBlock,
+        undo,
+        redo,
+        canUndo,
+        canRedo,
+        setTemplate,
+        reorderBlock,
+    } = builder;
 
-  const isEmpty = builder.template.rows.length === 0;
-  const selectedBlock = builder.getSelectedBlock();
+    const [showPreview, setShowPreview] = useState(false);
+    const [showExport, setShowExport] = useState(false);
+    const [showPreviewExportSheet, setShowPreviewExportSheet] = useState(false);
+    const [showMobileProperties, setShowMobileProperties] = useState(false);
+    const [includeGoogleFonts, setIncludeGoogleFonts] = useState(true);
+    const [exportFileName, setExportFileName] = useState('email-template.html');
+    const [showUpload, setShowUpload] = useState(false);
+    const [showAIGenerate, setShowAIGenerate] = useState(false);
+    const [showTemplates, setShowTemplates] = useState(false);
+    const [dragOverlay, setDragOverlay] = useState<EmailBlock | null>(null);
+    const [dragSource, setDragSource] = useState<'palette' | 'canvas' | null>(null);
+    const [isDragging, setIsDragging] = useState(false);
+    const [activeDropId, setActiveDropId] = useState<string | null>(null);
+    const [viewMode, setViewMode] = useState<'desktop' | 'mobile'>('desktop');
+    const [leftPanelTab, setLeftPanelTab] = useState<'structure' | 'content'>('structure');
+    const [editingImageBlockId, setEditingImageBlockId] = useState<string | null>(null);
+    const isMobile = useIsMobile();
 
-  // Keyboard shortcuts for undo/redo
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === 'z') {
-        e.preventDefault();
-        if (e.shiftKey) {
-          builder.redo();
-        } else {
-          builder.undo();
+    const isEmpty = template.rows.length === 0;
+    const selectedBlock = getSelectedBlock();
+
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if ((e.metaKey || e.ctrlKey) && e.key === 'z') {
+                e.preventDefault();
+                if (e.shiftKey) redo(); else undo();
+            }
+            if ((e.metaKey || e.ctrlKey) && e.key === 'y') {
+                e.preventDefault();
+                redo();
+            }
+        };
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [undo, redo]);
+
+    const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }));
+
+    const handleDragStart = useCallback((event: DragStartEvent) => {
+        setIsDragging(true);
+        const data = event.active.data.current;
+        if (data?.source === 'palette') {
+            setDragSource('palette');
+            setDragOverlay(createDefaultBlock(data.blockType as BlockType));
+        } else if (data?.source === 'canvas' && data?.block) {
+            setDragSource('canvas');
+            setDragOverlay(data.block);
         }
-      }
-      if ((e.metaKey || e.ctrlKey) && e.key === 'y') {
-        e.preventDefault();
-        builder.redo();
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [builder.undo, builder.redo]);
+    }, []);
 
-  const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
-  );
+    const handleDragOver = useCallback((event: DragOverEvent) => {
+        setActiveDropId(event.over?.id ? String(event.over.id) : null);
+    }, []);
 
-  const handleDragStart = useCallback((event: DragStartEvent) => {
-    const { active } = event;
-    const data = active.data.current;
-    if (data?.source === 'palette') {
-      setDragOverlay(createDefaultBlock(data.blockType as BlockType));
-    } else if (data?.source === 'canvas' && data?.block) {
-      setDragOverlay(data.block);
-    }
-  }, []);
-
-  const handleDragEnd = useCallback((event: DragEndEvent) => {
-    setDragOverlay(null);
-    const { active, over } = event;
-    if (!over) return;
-
-    const activeData = active.data.current;
-    const overData = over.data.current;
-
-    if (activeData?.source === 'palette') {
-      const blockType = activeData.blockType as BlockType;
-      if (overData?.rowId !== undefined && overData?.colIndex !== undefined) {
-        builder.addBlockToRow(overData.rowId, overData.colIndex, blockType);
-      } else {
-        builder.addBlockToCanvas(blockType);
-      }
-      return;
-    }
-
-    if (activeData?.source === 'canvas') {
-      const fromRowId = activeData.rowId as string;
-      const fromColIndex = activeData.colIndex as number;
-      const fromBlockIndex = activeData.blockIndex as number;
-
-      if (overData?.rowId !== undefined && overData?.colIndex !== undefined) {
-        const toRowId = overData.rowId as string;
-        const toColIndex = overData.colIndex as number;
-        const targetRow = builder.template.rows.find(r => r.id === toRowId);
-        const toBlockIndex = targetRow?.blocks[toColIndex]?.length ?? 0;
-        if (fromRowId !== toRowId || fromColIndex !== toColIndex || fromBlockIndex !== toBlockIndex) {
-          builder.reorderBlock(fromRowId, fromColIndex, fromBlockIndex, toRowId, toColIndex, toBlockIndex);
+    const collisionDetection = useCallback<CollisionDetection>((args) => {
+        const pointerCollisions = pointerWithin(args);
+        if (pointerCollisions.length > 0) {
+            const isPaletteDrag = args.active.data.current?.source === 'palette';
+            if (isPaletteDrag) {
+                const columnCollisions = pointerCollisions.filter((c) => String(c.id).startsWith('col-'));
+                if (columnCollisions.length > 0) return columnCollisions;
+                if (template.rows.length === 0) {
+                    return pointerCollisions.filter((c) => String(c.id) === 'canvas-drop');
+                }
+                return [];
+            }
+            return pointerCollisions;
         }
-        return;
-      }
-
-      if (over.data.current?.source === 'canvas') {
-        const toRowId = over.data.current.rowId as string;
-        const toColIndex = over.data.current.colIndex as number;
-        const toBlockIndex = over.data.current.blockIndex as number;
-        if (fromRowId !== toRowId || fromColIndex !== toColIndex || fromBlockIndex !== toBlockIndex) {
-          builder.reorderBlock(fromRowId, fromColIndex, fromBlockIndex, toRowId, toColIndex, toBlockIndex);
+        if (args.active.data.current?.source === 'canvas') {
+            return closestCenter(args);
         }
-      }
-    }
-  }, [builder]);
+        return [];
+    }, [template.rows.length]);
 
-  const handleStartScratch = useCallback(() => {
-    builder.addRow(1);
-  }, [builder]);
+    const resetDragState = useCallback(() => {
+        setDragOverlay(null);
+        setDragSource(null);
+        setIsDragging(false);
+        setActiveDropId(null);
+    }, []);
 
-  const handleImportTemplate = useCallback((template: EmailTemplate) => {
-    builder.setTemplate(template);
-  }, [builder]);
+    const handleDragEnd = useCallback((event: DragEndEvent) => {
+        resetDragState();
+        const { active, over } = event;
+        if (!over) return;
 
-  const allBlockIds = builder.template.rows.flatMap(r => r.blocks.flatMap(col => col.map(b => b.id)));
+        const activeData = active.data.current;
+        const overData = over.data.current;
 
-  return (
-    <div className="flex h-screen flex-col bg-canvas">
-      <BuilderHeader
-        onPreview={() => setShowPreview(true)}
-        onExport={() => setShowExport(true)}
-        onStartScratch={handleStartScratch}
-        onUploadHtml={() => setShowUpload(true)}
-        onGenerateAI={() => setShowAIGenerate(true)}
-        onSelectTemplate={handleImportTemplate}
-        onOpenTemplates={() => setShowTemplates(true)}
-        onUndo={builder.undo}
-        onRedo={builder.redo}
-        canUndo={builder.canUndo}
-        canRedo={builder.canRedo}
-      />
+        if (activeData?.source === 'palette') {
+            const blockType = activeData.blockType as BlockType;
+            if (overData?.rowId !== undefined && overData?.colIndex !== undefined) {
+                addBlockToRow(overData.rowId, overData.colIndex, blockType);
+            } else if (over.id === 'canvas-drop' && template.rows.length === 0) {
+                addBlockToCanvas(blockType);
+            }
+            return;
+        }
 
-      <DndContext
-        sensors={sensors}
-        collisionDetection={closestCenter}
-        onDragStart={handleDragStart}
-        onDragEnd={handleDragEnd}
-      >
-        <div className="flex flex-1 overflow-hidden">
-          {isEmpty ? (
-            <WelcomeScreen
-              onStartScratch={handleStartScratch}
-              onUploadHtml={() => setShowUpload(true)}
-              onGenerateAI={() => setShowAIGenerate(true)}
-              onSelectTemplate={handleImportTemplate}
-            />
-          ) : (
-            <>
-              {/* Left Panel */}
-              <div className="w-56 shrink-0 overflow-y-auto border-r border-border bg-card p-4">
-                <BlockPalette onAddBlock={builder.addBlockToCanvas} />
-                <RowControls onAddRow={builder.addRow} />
-              </div>
+        if (activeData?.source === 'canvas') {
+            const fromRowId = activeData.rowId as string;
+            const fromColIndex = activeData.colIndex as number;
+            const fromBlockIndex = activeData.blockIndex as number;
 
-              {/* Center - Canvas */}
-              <SortableContext items={allBlockIds} strategy={verticalListSortingStrategy}>
-                <Canvas
-                  template={builder.template}
-                  selectedBlockId={builder.selectedBlockId}
-                  selectedRowId={builder.selectedRowId}
-                  onSelectBlock={(blockId, rowId) => {
-                    builder.setSelectedBlockId(blockId);
-                    builder.setSelectedRowId(rowId);
-                  }}
-                  onDeselectAll={() => {
-                    builder.setSelectedBlockId(null);
-                    builder.setSelectedRowId(null);
-                  }}
-                  onMoveRow={builder.moveRow}
-                  onMoveBlock={builder.moveBlock}
-                  onDeleteBlock={builder.deleteBlock}
-                  onDeleteRow={builder.deleteRow}
-                  onChangeRowColumns={builder.changeRowColumns}
-                  onAddBlockToRow={builder.addBlockToRow}
-                  onUpdateBlock={builder.updateBlock}
+            if (overData?.rowId !== undefined && overData?.colIndex !== undefined) {
+                const toRowId = overData.rowId as string;
+                const toColIndex = overData.colIndex as number;
+                const targetRow = template.rows.find((r) => r.id === toRowId);
+                const toBlockIndex = targetRow?.blocks[toColIndex]?.length ?? 0;
+                if (fromRowId !== toRowId || fromColIndex !== toColIndex || fromBlockIndex !== toBlockIndex) {
+                    reorderBlock(fromRowId, fromColIndex, fromBlockIndex, toRowId, toColIndex, toBlockIndex);
+                }
+                return;
+            }
+
+            if (over.data.current?.source === 'canvas') {
+                const toRowId = over.data.current.rowId as string;
+                const toColIndex = over.data.current.colIndex as number;
+                const toBlockIndex = over.data.current.blockIndex as number;
+                if (fromRowId !== toRowId || fromColIndex !== toColIndex || fromBlockIndex !== toBlockIndex) {
+                    reorderBlock(fromRowId, fromColIndex, fromBlockIndex, toRowId, toColIndex, toBlockIndex);
+                }
+            }
+        }
+    }, [addBlockToCanvas, addBlockToRow, reorderBlock, resetDragState, template.rows]);
+
+    const handleStartScratch = useCallback(() => addRow(1), [addRow]);
+    const handleImportTemplate = useCallback((nextTemplate: EmailTemplate) => setTemplate(nextTemplate), [setTemplate]);
+    const handleSelectBlock = useCallback((blockId: string, rowId: string) => {
+        setSelectedBlockId(blockId);
+        setSelectedRowId(rowId);
+    }, [setSelectedBlockId, setSelectedRowId]);
+    const handleDeselectAll = useCallback(() => {
+        setSelectedBlockId(null);
+        setSelectedRowId(null);
+    }, [setSelectedBlockId, setSelectedRowId]);
+    const handleUpdateTemplate = useCallback((updates: Partial<EmailTemplate>) => {
+        setTemplate((prev) => ({ ...prev, ...updates }));
+    }, [setTemplate]);
+
+    const handleDoubleClickBlock = useCallback((blockId: string) => {
+        const block = template.rows.flatMap((r) => r.blocks.flatMap((col) => col)).find((b) => b.id === blockId);
+        if (block && ['image', 'hero', 'product-card'].includes(block.type)) {
+            setEditingImageBlockId(block.id);
+        }
+    }, [template.rows]);
+
+    const openPreview = useCallback(() => setShowPreview(true), []);
+    const openExport = useCallback(() => setShowExport(true), []);
+    const openPreviewExportSettings = useCallback(() => setShowPreviewExportSheet(true), []);
+    const openUpload = useCallback(() => setShowUpload(true), []);
+    const openAIGenerate = useCallback(() => setShowAIGenerate(true), []);
+    const openTemplates = useCallback(() => setShowTemplates(true), []);
+
+    const allBlockIds = template.rows.flatMap((r) => r.blocks.flatMap((col) => col.map((b) => b.id)));
+
+    return (
+        <TranslationProvider>
+            <div className="flex h-screen flex-col bg-canvas">
+                <BuilderHeader
+                    isEmpty={isEmpty}
+                    onPreview={openPreviewExportSettings}
+                    onExport={openPreviewExportSettings}
+                    onStartScratch={handleStartScratch}
+                    onUploadHtml={openUpload}
+                    onGenerateAI={openAIGenerate}
+                    onOpenTemplates={openTemplates}
+                    onUndo={undo}
+                    onRedo={redo}
+                    canUndo={canUndo}
+                    canRedo={canRedo}
+                    viewMode={viewMode}
+                    onViewModeChange={setViewMode}
                 />
-              </SortableContext>
 
-              {/* Right Panel */}
-              <div className="w-72 shrink-0 overflow-y-auto border-l border-border bg-card">
-                <PropertiesPanel
-                  block={selectedBlock}
-                  onUpdate={builder.updateBlock}
-                  template={builder.template}
-                  onUpdateTemplate={(updates) => builder.setTemplate(prev => ({ ...prev, ...updates }))}
+                <DndContext
+                    sensors={sensors}
+                    collisionDetection={collisionDetection}
+                    onDragStart={handleDragStart}
+                    onDragOver={handleDragOver}
+                    onDragEnd={handleDragEnd}
+                    onDragCancel={resetDragState}
+                >
+                    <div className="flex flex-1 overflow-hidden">
+                        {isEmpty ? (
+                            <WelcomeScreen
+                                onStartScratch={handleStartScratch}
+                                onUploadHtml={openUpload}
+                                onGenerateAI={openAIGenerate}
+                                onSelectTemplate={handleImportTemplate}
+                            />
+                        ) : (
+                            <>
+                                <LeftSidebar
+                                    leftPanelTab={leftPanelTab}
+                                    onLeftPanelTabChange={setLeftPanelTab}
+                                    onAddRow={addRow}
+                                    onAddBlockToCanvas={addBlockToCanvas}
+                                />
+
+                                <SortableContext items={allBlockIds} strategy={verticalListSortingStrategy}>
+                                    <Canvas
+                                        template={template}
+                                        selectedBlockId={selectedBlockId}
+                                        selectedRowId={selectedRowId}
+                                        viewMode={viewMode}
+                                        isDragging={isDragging}
+                                        activeDropId={activeDropId}
+                                        onSelectBlock={handleSelectBlock}
+                                        onDeselectAll={handleDeselectAll}
+                                        onMoveRow={moveRow}
+                                        onMoveBlock={moveBlock}
+                                        onDeleteBlock={deleteBlock}
+                                        onDeleteRow={deleteRow}
+                                        onChangeRowColumns={changeRowColumns}
+                                        onAddBlockToRow={addBlockToRow}
+                                        onUpdateBlock={updateBlock}
+                                        onDoubleClickBlock={handleDoubleClickBlock}
+                                    />
+                                </SortableContext>
+
+                                {!isMobile && (
+                                    <div className="w-72 shrink-0 overflow-y-auto border-l border-border bg-card">
+                                        <PropertiesPanel
+                                            block={selectedBlock}
+                                            onUpdate={updateBlock}
+                                            template={template}
+                                            onUpdateTemplate={handleUpdateTemplate}
+                                        />
+                                    </div>
+                                )}
+                            </>
+                        )}
+                    </div>
+
+                    <DragOverlay>
+                        {dragOverlay && (
+                            dragSource === 'palette'
+                                ? <PaletteDragPreview type={dragOverlay.type} />
+                                : (
+                                    <div className="rounded-md border border-primary bg-white p-2 shadow-lg opacity-90 max-w-[300px]">
+                                        <BlockRenderer block={dragOverlay} />
+                                    </div>
+                                )
+                        )}
+                    </DragOverlay>
+                </DndContext>
+
+                {isMobile && !isEmpty && (
+                    <Button
+                        onClick={() => setShowMobileProperties(true)}
+                        className="fixed bottom-4 right-4 z-40 shadow-lg"
+                        size="sm"
+                    >
+                        <SlidersHorizontal className="mr-1.5 h-4 w-4" />
+                        Properties
+                    </Button>
+                )}
+
+                <EmailBuilderSheet
+                    open={showMobileProperties}
+                    onOpenChange={setShowMobileProperties}
+                    side="bottom"
+                    className="h-[78vh] rounded-t-2xl"
+                    title="Properties"
+                    description="Edit block and template settings."
+                >
+                    <PropertiesPanel
+                        block={selectedBlock}
+                        onUpdate={updateBlock}
+                        template={template}
+                        onUpdateTemplate={handleUpdateTemplate}
+                    />
+                </EmailBuilderSheet>
+
+                <PreviewExportSheet
+                    open={showPreviewExportSheet}
+                    onOpenChange={setShowPreviewExportSheet}
+                    includeGoogleFonts={includeGoogleFonts}
+                    onIncludeGoogleFontsChange={setIncludeGoogleFonts}
+                    exportFileName={exportFileName}
+                    onExportFileNameChange={setExportFileName}
+                    onOpenPreview={openPreview}
+                    onOpenExport={openExport}
                 />
-              </div>
-            </>
-          )}
-        </div>
 
-        <DragOverlay>
-          {dragOverlay && (
-            <div className="rounded-md border border-primary bg-card p-2 shadow-lg opacity-90 max-w-[300px]">
-              <BlockRenderer block={dragOverlay} />
+                <PreviewModal
+                    open={showPreview}
+                    onOpenChange={setShowPreview}
+                    template={template}
+                    includeGoogleFonts={includeGoogleFonts}
+                />
+                <ExportModal
+                    open={showExport}
+                    onOpenChange={setShowExport}
+                    template={template}
+                    includeGoogleFonts={includeGoogleFonts}
+                    fileName={exportFileName}
+                />
+                <UploadHtmlModal open={showUpload} onOpenChange={setShowUpload} onImport={handleImportTemplate} />
+                <AIGenerateModal open={showAIGenerate} onOpenChange={setShowAIGenerate} onGenerate={handleImportTemplate} />
+                <TemplatePickerModal open={showTemplates} onOpenChange={setShowTemplates} onSelectTemplate={handleImportTemplate} />
+
+                {editingImageBlockId && (() => {
+                    const editingImageBlock = template.rows.flatMap((r) => r.blocks.flatMap((col) => col)).find((b) => b.id === editingImageBlockId);
+                    const editingImageUrl =
+                        editingImageBlock?.type === 'image' ? editingImageBlock.src :
+                            (editingImageBlock?.type === 'hero' || editingImageBlock?.type === 'product-card') ? editingImageBlock.imageUrl : '';
+                    return (
+                        <ImageEditorModal
+                            open={!!editingImageBlockId}
+                            onOpenChange={(open) => !open && setEditingImageBlockId(null)}
+                            currentSrc={editingImageUrl}
+                            onSave={(newSrc) => {
+                                if (editingImageBlock?.type === 'image') updateBlock(editingImageBlockId, { src: newSrc });
+                                else if (editingImageBlock?.type === 'hero' || editingImageBlock?.type === 'product-card') updateBlock(editingImageBlockId, { imageUrl: newSrc });
+                                setEditingImageBlockId(null);
+                            }}
+                        />
+                    );
+                })()}
             </div>
-          )}
-        </DragOverlay>
-      </DndContext>
-
-      <PreviewModal open={showPreview} onOpenChange={setShowPreview} template={builder.template} />
-      <ExportModal open={showExport} onOpenChange={setShowExport} template={builder.template} />
-      <UploadHtmlModal open={showUpload} onOpenChange={setShowUpload} onImport={handleImportTemplate} />
-      <AIGenerateModal open={showAIGenerate} onOpenChange={setShowAIGenerate} onGenerate={handleImportTemplate} />
-      <TemplatePickerModal open={showTemplates} onOpenChange={setShowTemplates} onSelectTemplate={handleImportTemplate} />
-    </div>
-  );
+        </TranslationProvider>
+    );
 };
 
 export default Index;

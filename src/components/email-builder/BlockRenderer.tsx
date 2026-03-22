@@ -1,101 +1,104 @@
-import { EmailBlock } from '@/types/email-builder';
-import { InlineEditor } from './InlineEditor';
+import { EmailBlock, SocialBlock, ConditionalBlock } from '@/types/email-builder';
+import { SOCIAL_NETWORK_MAP } from '@/config/social-networks';
+import { DEFAULT_PERSONALIZATION_VARIABLES } from '@/config/personalization';
+import { HeadingRenderer } from './blocks/heading';
+import { TextRenderer } from './blocks/text';
+import { ImageRenderer } from './blocks/image';
+import { ButtonRenderer } from './blocks/button';
+import { DividerRenderer } from './blocks/divider';
+import { SpacerRenderer } from './blocks/spacer';
+import { HtmlRenderer } from './blocks/html';
+import { HeroRenderer } from './blocks/hero';
+import { ProductCardRenderer } from './blocks/product-card';
+import { CouponRenderer } from './blocks/coupon';
+import { SurveyRenderer } from './blocks/survey';
+import { TimerRenderer } from './blocks/timer';
+import { VideoRenderer } from './blocks/video';
+import { SocialRenderer }       from './blocks/social';
+import { ConditionalRenderer }  from './blocks/conditional';
 
 interface BlockRendererProps {
-  block: EmailBlock;
-  isPreview?: boolean;
-  onInlineUpdate?: (blockId: string, updates: Partial<EmailBlock>) => void;
-  isSelected?: boolean;
+    block: EmailBlock;
+    isPreview?: boolean;
+    onInlineUpdate?: (blockId: string, updates: Partial<EmailBlock>) => void;
+    isSelected?: boolean;
 }
-export function BlockRenderer({ block, isPreview, onInlineUpdate, isSelected }: BlockRendererProps) {
-  const canInlineEdit = !isPreview && !!onInlineUpdate && isSelected;
 
-  switch (block.type) {
-    case 'heading': {
-      const sizes = { h1: 'text-2xl', h2: 'text-xl', h3: 'text-lg' };
-      if (canInlineEdit) {
-        return (
-          <InlineEditor
-            value={block.content}
-            onChange={(v) => onInlineUpdate(block.id, { content: v })}
-            style={{ color: block.color, textAlign: block.align }}
-            className={`${sizes[block.level]} font-bold py-1`}
-          />
-        );
-      }
-      return (
-        <div style={{ color: block.color, textAlign: block.align }} className={`${sizes[block.level]} font-bold py-1`}
-          dangerouslySetInnerHTML={{ __html: block.content }}
-        />
-      );
+export function BlockRenderer({ block, isPreview, onInlineUpdate, isSelected }: BlockRendererProps) {
+    switch (block.type) {
+        case 'heading':
+            return (
+                <HeadingRenderer
+                    block={block}
+                    isSelected={isSelected && !isPreview}
+                    onInlineUpdate={onInlineUpdate}
+                />
+            );
+
+        case 'text':
+            return (
+                <TextRenderer
+                    block={block}
+                    isSelected={isSelected && !isPreview}
+                    onInlineUpdate={onInlineUpdate}
+                />
+            );
+
+        case 'image':
+            return (
+                <ImageRenderer
+                    block={block}
+                    isSelected={isSelected && !isPreview}
+                    onInlineUpdate={onInlineUpdate}
+                />
+            );
+
+        case 'button':
+            return (
+                <ButtonRenderer
+                    block={block}
+                    isSelected={isSelected && !isPreview}
+                    onInlineUpdate={onInlineUpdate}
+                />
+            );
+
+        case 'hero':
+            return <HeroRenderer block={block} />;
+
+        case 'product-card':
+            return <ProductCardRenderer block={block} />;
+
+        case 'coupon':
+            return <CouponRenderer block={block} />;
+
+        case 'divider':
+            return <DividerRenderer block={block} />;
+
+        case 'spacer':
+            return <SpacerRenderer block={block} />;
+
+        case 'html':
+            return <HtmlRenderer block={block} />;
+
+        case 'social':
+            return <SocialRenderer block={block} />;
+
+        case 'conditional':
+            return (
+                <ConditionalRenderer
+                    block={block}
+                    isPreview={isPreview}
+                    onInlineUpdate={onInlineUpdate}
+                />
+            );
+
+        case 'survey':
+            return <SurveyRenderer block={block} />;
+
+        case 'timer':
+            return <TimerRenderer block={block} />;
+
+        case 'video':
+            return <VideoRenderer block={block} />;
     }
-    case 'text':
-      if (canInlineEdit) {
-        return (
-          <InlineEditor
-            value={block.content}
-            onChange={(v) => onInlineUpdate(block.id, { content: v })}
-            style={{ color: block.color, fontSize: block.fontSize, textAlign: block.align }}
-            className="py-1 leading-relaxed"
-            tag="p"
-          />
-        );
-      }
-      return (
-        <p style={{ color: block.color, fontSize: block.fontSize, textAlign: block.align }} className="py-1 leading-relaxed"
-          dangerouslySetInnerHTML={{ __html: block.content }}
-        />
-      );
-    case 'image':
-      return (
-        <div style={{ textAlign: block.align }} className="py-1">
-          <img src={block.src} alt={block.alt} style={{ maxWidth: `${block.width}%` }} className="inline-block h-auto" />
-        </div>
-      );
-    case 'button':
-      if (canInlineEdit) {
-        return (
-          <div style={{ textAlign: block.align }} className="py-2">
-            <InlineEditor
-              value={block.text}
-              onChange={(v) => onInlineUpdate(block.id, { text: v })}
-              style={{
-                backgroundColor: block.bgColor,
-                color: block.textColor,
-                borderRadius: block.borderRadius,
-                display: 'inline-block',
-              }}
-              className="px-7 py-3 font-semibold text-base"
-              tag="span"
-            />
-          </div>
-        );
-      }
-      return (
-        <div style={{ textAlign: block.align }} className="py-2">
-          <a
-            href={block.url}
-            onClick={e => e.preventDefault()}
-            style={{
-              backgroundColor: block.bgColor,
-              color: block.textColor,
-              borderRadius: block.borderRadius,
-            }}
-            className="inline-block px-7 py-3 font-semibold text-base no-underline"
-            dangerouslySetInnerHTML={{ __html: block.text }}
-          />
-        </div>
-      );
-    case 'divider':
-      return (
-        <hr
-          style={{
-            borderTop: `${block.thickness}px ${block.style} ${block.color}`,
-          }}
-          className="my-3 border-0"
-        />
-      );
-    case 'spacer':
-      return <div style={{ height: block.height }} />;
-  }
 }

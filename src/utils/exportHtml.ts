@@ -1,43 +1,75 @@
 import { EmailTemplate, EmailBlock, EmailRow } from '@/types/email-builder';
+import { getGoogleFontHrefForFamily } from '@/config/email-fonts';
+import { exportHeadingHtml }         from '@/components/email-builder/blocks/heading';
+import { exportTextHtml }            from '@/components/email-builder/blocks/text';
+import { exportImageHtml }           from '@/components/email-builder/blocks/image';
+import { exportButtonHtml }          from '@/components/email-builder/blocks/button';
+import { exportDividerHtml }         from '@/components/email-builder/blocks/divider';
+import { exportSpacerHtml }          from '@/components/email-builder/blocks/spacer';
+import { exportHtmlBlockHtml }       from '@/components/email-builder/blocks/html';
+import { exportHeroHtml }            from '@/components/email-builder/blocks/hero';
+import { exportProductCardHtml }     from '@/components/email-builder/blocks/product-card';
+import { exportCouponHtml }          from '@/components/email-builder/blocks/coupon';
+import { exportSurveyHtml }          from '@/components/email-builder/blocks/survey';
+import { exportTimerHtml }           from '@/components/email-builder/blocks/timer';
+import { exportVideoHtml }           from '@/components/email-builder/blocks/video';
+import { exportSocialHtml }          from '@/components/email-builder/blocks/social';
+import { exportConditionalHtml }     from '@/components/email-builder/blocks/conditional';
+
+interface ExportHtmlOptions {
+    includeGoogleFonts?: boolean;
+}
 
 function renderBlock(block: EmailBlock, fontFamily: string): string {
-  switch (block.type) {
-    case 'heading': {
-      const tag = block.level;
-      const sizes = { h1: '28px', h2: '22px', h3: '18px' };
-      return `<${tag} style="margin:0;padding:8px 0;color:${block.color};text-align:${block.align};font-family:${fontFamily};font-size:${sizes[block.level]};font-weight:700;">${block.content}</${tag}>`;
+    switch (block.type) {
+        case 'heading':      return exportHeadingHtml(block, fontFamily);
+        case 'text':         return exportTextHtml(block, fontFamily);
+        case 'image':        return exportImageHtml(block, fontFamily);
+        case 'button':       return exportButtonHtml(block, fontFamily);
+        case 'hero':         return exportHeroHtml(block, fontFamily);
+        case 'product-card': return exportProductCardHtml(block, fontFamily);
+        case 'coupon':       return exportCouponHtml(block, fontFamily);
+        case 'divider':      return exportDividerHtml(block, fontFamily);
+        case 'spacer':       return exportSpacerHtml(block, fontFamily);
+        case 'html':         return exportHtmlBlockHtml(block, fontFamily);
+        case 'social':       return exportSocialHtml(block, fontFamily);
+        case 'survey':       return exportSurveyHtml(block, fontFamily);
+        case 'timer':        return exportTimerHtml(block, fontFamily);
+        case 'video':        return exportVideoHtml(block, fontFamily);
+        case 'conditional':  return exportConditionalHtml(block, fontFamily, renderBlock);
     }
-    case 'text':
-      return `<p style="margin:0;padding:8px 0;color:${block.color};font-size:${block.fontSize}px;text-align:${block.align};font-family:${fontFamily};line-height:1.6;">${block.content}</p>`;
-    case 'image':
-      return `<div style="text-align:${block.align};padding:8px 0;"><img src="${block.src}" alt="${block.alt}" style="max-width:${block.width}%;height:auto;display:inline-block;" /></div>`;
-    case 'button':
-      return `<div style="text-align:${block.align};padding:12px 0;"><a href="${block.url}" style="display:inline-block;background:${block.bgColor};color:${block.textColor};padding:12px 28px;text-decoration:none;border-radius:${block.borderRadius}px;font-family:${fontFamily};font-weight:600;font-size:16px;">${block.text}</a></div>`;
-    case 'divider':
-      return `<hr style="border:none;border-top:${block.thickness}px ${block.style} ${block.color};margin:12px 0;" />`;
-    case 'spacer':
-      return `<div style="height:${block.height}px;"></div>`;
-  }
 }
 
 function renderRow(row: EmailRow, contentWidth: number, fontFamily: string): string {
-  const colWidth = Math.floor(100 / row.columns);
-  const cols = row.blocks.map((col, i) => {
-    const blocksHtml = col.map(b => renderBlock(b, fontFamily)).join('\n');
-    return `<td style="width:${colWidth}%;vertical-align:top;padding:0 8px;">${blocksHtml}</td>`;
-  }).join('\n');
+    const colWidth = Math.floor(100 / row.columns);
+    const cols = row.blocks
+        .map((col) => {
+            const blocksHtml = col.map((b) => renderBlock(b, fontFamily)).join('\n');
+            return `<td style="width:${colWidth}%;vertical-align:top;padding:0 8px;">${blocksHtml}</td>`;
+        })
+        .join('\n');
 
-  return `<table width="100%" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;"><tr>${cols}</tr></table>`;
+    return `<table width="100%" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;"><tr>${cols}</tr></table>`;
 }
 
-export function exportToHtml(template: EmailTemplate): string {
-  const rowsHtml = template.rows.map(row => renderRow(row, template.contentWidth, template.fontFamily)).join('\n');
+export function exportToHtml(template: EmailTemplate, options: ExportHtmlOptions = {}): string {
+    const { includeGoogleFonts = true } = options;
+    const rowsHtml = template.rows
+        .map((row) => renderRow(row, template.contentWidth, template.fontFamily))
+        .join('\n');
+    const googleFontHref = includeGoogleFonts ? getGoogleFontHrefForFamily(template.fontFamily) : null;
+    const googleFontHead = googleFontHref
+        ? `<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="${googleFontHref}" rel="stylesheet">`
+        : '';
 
-  return `<!DOCTYPE html>
+    return `<!DOCTYPE html>
 <html>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
+${googleFontHead}
 <title>Email</title>
 </head>
 <body style="margin:0;padding:0;background-color:${template.bgColor};font-family:${template.fontFamily};">

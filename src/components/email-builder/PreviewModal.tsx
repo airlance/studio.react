@@ -6,10 +6,11 @@ interface PreviewModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   template: EmailTemplate;
+  includeGoogleFonts?: boolean;
 }
 
-export function PreviewModal({ open, onOpenChange, template }: PreviewModalProps) {
-  const html = exportToHtml(template);
+export function PreviewModal({ open, onOpenChange, template, includeGoogleFonts = true }: PreviewModalProps) {
+  const html = exportToHtml(template, { includeGoogleFonts });
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
