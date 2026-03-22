@@ -11,18 +11,11 @@ interface StepContentProps {
     data: CampaignFormData;
     errors: StepErrors;
     onChange: (patch: Partial<CampaignFormData>) => void;
+    onOpenBuilder?: (data: CampaignFormData) => void;
 }
 
-/*
- * StepContent reads the campaignId from the URL params.
- * If we are on /campaigns/create (no id yet) we navigate to
- * /campaigns/new/content so the builder has a stable route.
- * Once the campaign is persisted the id will be replaced with the real one.
- */
-export function StepContent({ data, errors, onChange }: StepContentProps) {
+export function StepContent({ data, errors, onChange, onOpenBuilder }: StepContentProps) {
     const navigate = useNavigate();
-
-    // campaignId is present on /campaigns/:campaignId/edit, absent on /campaigns/create
     const { campaignId } = useParams<{ campaignId?: string }>();
 
     const handleSubjectChange = useCallback(
@@ -38,7 +31,7 @@ export function StepContent({ data, errors, onChange }: StepContentProps) {
     const handleOpenBuilder = useCallback(() => {
         const id = campaignId ?? 'new';
         navigate(`/campaigns/${id}/content`);
-    }, [navigate, campaignId]);
+    }, [onOpenBuilder, data, navigate, campaignId]);
 
     const subjectLen = data.subject.length;
     const subjectOverLimit = subjectLen > SUBJECT_MAX;

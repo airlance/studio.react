@@ -45,6 +45,7 @@ const App = () => (
                                 path="/fields"
                                 element={<AppLayout><FieldsPage /></AppLayout>}
                             />
+                            {/* This route MUST be before any wildcard and OUTSIDE AppLayout */}
                             <Route
                                 path="/campaigns/:campaignId/content"
                                 element={<CampaignBuilderPage />}
