@@ -29,7 +29,6 @@ import { BlockRenderer } from '@/components/email-builder/BlockRenderer';
 import { ImageEditorModal } from '@/components/email-builder/ImageEditorModal';
 import { LeftSidebar } from '@/components/email-builder/index-page/LeftSidebar';
 import { PaletteDragPreview } from '@/components/email-builder/index-page/PaletteDragPreview';
-import { TranslationProvider } from '@/config/i18n/context';
 import { BlockType, EmailBlock, EmailTemplate } from '@/types/email-builder';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Button } from '@/components/ui/button';
@@ -218,172 +217,168 @@ const Index = () => {
     const allBlockIds = template.rows.flatMap((r) => r.blocks.flatMap((col) => col.map((b) => b.id)));
 
     return (
-        <TranslationProvider>
-            <div className="flex h-screen flex-col bg-canvas">
-                <BuilderHeader
-                    isEmpty={isEmpty}
-                    onPreview={openPreviewExportSettings}
-                    onExport={openPreviewExportSettings}
-                    onStartScratch={handleStartScratch}
-                    onUploadHtml={openUpload}
-                    onGenerateAI={openAIGenerate}
-                    onOpenTemplates={openTemplates}
-                    onUndo={undo}
-                    onRedo={redo}
-                    canUndo={canUndo}
-                    canRedo={canRedo}
-                    viewMode={viewMode}
-                    onViewModeChange={setViewMode}
-                />
+        <div className="flex h-full flex-col bg-canvas">
+            <BuilderHeader
+                isEmpty={isEmpty}
+                onPreview={openPreviewExportSettings}
+                onExport={openPreviewExportSettings}
+                onStartScratch={handleStartScratch}
+                onUploadHtml={openUpload}
+                onGenerateAI={openAIGenerate}
+                onOpenTemplates={openTemplates}
+                onUndo={undo}
+                onRedo={redo}
+                canUndo={canUndo}
+                canRedo={canRedo}
+                viewMode={viewMode}
+                onViewModeChange={setViewMode}
+            />
 
-                <DndContext
-                    sensors={sensors}
-                    collisionDetection={collisionDetection}
-                    onDragStart={handleDragStart}
-                    onDragOver={handleDragOver}
-                    onDragEnd={handleDragEnd}
-                    onDragCancel={resetDragState}
-                >
-                    <div className="flex flex-1 overflow-hidden">
-                        {isEmpty ? (
-                            <WelcomeScreen
-                                onStartScratch={handleStartScratch}
-                                onUploadHtml={openUpload}
-                                onGenerateAI={openAIGenerate}
-                                onSelectTemplate={handleImportTemplate}
-                            />
-                        ) : (
-                            <>
-                                <LeftSidebar
-                                    leftPanelTab={leftPanelTab}
-                                    onLeftPanelTabChange={setLeftPanelTab}
-                                    onAddRow={addRow}
-                                    onAddBlockToCanvas={addBlockToCanvas}
-                                />
-
-                                <SortableContext items={allBlockIds} strategy={verticalListSortingStrategy}>
-                                    <Canvas
-                                        template={template}
-                                        selectedBlockId={selectedBlockId}
-                                        selectedRowId={selectedRowId}
-                                        viewMode={viewMode}
-                                        isDragging={isDragging}
-                                        activeDropId={activeDropId}
-                                        onSelectBlock={handleSelectBlock}
-                                        onDeselectAll={handleDeselectAll}
-                                        onMoveRow={moveRow}
-                                        onMoveBlock={moveBlock}
-                                        onDeleteBlock={deleteBlock}
-                                        onDeleteRow={deleteRow}
-                                        onChangeRowColumns={changeRowColumns}
-                                        onAddBlockToRow={addBlockToRow}
-                                        onUpdateBlock={updateBlock}
-                                        onDoubleClickBlock={handleDoubleClickBlock}
-                                    />
-                                </SortableContext>
-
-                                {!isMobile && (
-                                    <div className="w-72 shrink-0 overflow-y-auto border-l border-border bg-card">
-                                        <PropertiesPanel
-                                            block={selectedBlock}
-                                            onUpdate={updateBlock}
-                                            template={template}
-                                            onUpdateTemplate={handleUpdateTemplate}
-                                        />
-                                    </div>
-                                )}
-                            </>
-                        )}
-                    </div>
-
-                    <DragOverlay>
-                        {dragOverlay && (
-                            dragSource === 'palette'
-                                ? <PaletteDragPreview type={dragOverlay.type} />
-                                : (
-                                    <div className="rounded-md border border-primary bg-white p-2 shadow-lg opacity-90 max-w-[300px]">
-                                        <BlockRenderer block={dragOverlay} />
-                                    </div>
-                                )
-                        )}
-                    </DragOverlay>
-                </DndContext>
-
-                {isMobile && !isEmpty && (
-                    <Button
-                        onClick={() => setShowMobileProperties(true)}
-                        className="fixed bottom-4 right-4 z-40 shadow-lg"
-                        size="sm"
-                    >
-                        <SlidersHorizontal className="mr-1.5 h-4 w-4" />
-                        Properties
-                    </Button>
-                )}
-
-                <EmailBuilderSheet
-                    open={showMobileProperties}
-                    onOpenChange={setShowMobileProperties}
-                    side="bottom"
-                    className="h-[78vh] rounded-t-2xl"
-                    title="Properties"
-                    description="Edit block and template settings."
-                >
-                    <PropertiesPanel
-                        block={selectedBlock}
-                        onUpdate={updateBlock}
-                        template={template}
-                        onUpdateTemplate={handleUpdateTemplate}
-                    />
-                </EmailBuilderSheet>
-
-                <PreviewExportSheet
-                    open={showPreviewExportSheet}
-                    onOpenChange={setShowPreviewExportSheet}
-                    includeGoogleFonts={includeGoogleFonts}
-                    onIncludeGoogleFontsChange={setIncludeGoogleFonts}
-                    exportFileName={exportFileName}
-                    onExportFileNameChange={setExportFileName}
-                    onOpenPreview={openPreview}
-                    onOpenExport={openExport}
-                />
-
-                <PreviewModal
-                    open={showPreview}
-                    onOpenChange={setShowPreview}
-                    template={template}
-                    includeGoogleFonts={includeGoogleFonts}
-                />
-                <ExportModal
-                    open={showExport}
-                    onOpenChange={setShowExport}
-                    template={template}
-                    includeGoogleFonts={includeGoogleFonts}
-                    fileName={exportFileName}
-                />
-                <UploadHtmlModal open={showUpload} onOpenChange={setShowUpload} onImport={handleImportTemplate} />
-                <AIGenerateModal open={showAIGenerate} onOpenChange={setShowAIGenerate} onGenerate={handleImportTemplate} />
-                <TemplatePickerModal open={showTemplates} onOpenChange={setShowTemplates} onSelectTemplate={handleImportTemplate} />
-
-                {editingImageBlockId && (() => {
-                    const editingImageBlock = template.rows.flatMap((r) => r.blocks.flatMap((col) => col)).find((b) => b.id === editingImageBlockId);
-                    const editingImageUrl =
-                        editingImageBlock?.type === 'image' ? editingImageBlock.src :
-                            (editingImageBlock?.type === 'hero' || editingImageBlock?.type === 'product-card') ? editingImageBlock.imageUrl : '';
-                    return (
-                        <ImageEditorModal
-                            open={!!editingImageBlockId}
-                            onOpenChange={(open) => !open && setEditingImageBlockId(null)}
-                            currentSrc={editingImageUrl}
-                            onSave={(newSrc) => {
-                                if (editingImageBlock?.type === 'image') updateBlock(editingImageBlockId, { src: newSrc });
-                                else if (editingImageBlock?.type === 'hero' || editingImageBlock?.type === 'product-card') updateBlock(editingImageBlockId, { imageUrl: newSrc });
-                                setEditingImageBlockId(null);
-                            }}
+            <DndContext
+                sensors={sensors}
+                collisionDetection={collisionDetection}
+                onDragStart={handleDragStart}
+                onDragOver={handleDragOver}
+                onDragEnd={handleDragEnd}
+                onDragCancel={resetDragState}
+            >
+                <div className="flex flex-1 overflow-hidden">
+                    {isEmpty ? (
+                        <WelcomeScreen
+                            onStartScratch={handleStartScratch}
+                            onUploadHtml={openUpload}
+                            onGenerateAI={openAIGenerate}
+                            onSelectTemplate={handleImportTemplate}
                         />
-                    );
-                })()}
-            </div>
-        </TranslationProvider>
+                    ) : (
+                        <>
+                            <LeftSidebar
+                                leftPanelTab={leftPanelTab}
+                                onLeftPanelTabChange={setLeftPanelTab}
+                                onAddRow={addRow}
+                                onAddBlockToCanvas={addBlockToCanvas}
+                            />
+                            <SortableContext items={allBlockIds} strategy={verticalListSortingStrategy}>
+                                <Canvas
+                                    template={template}
+                                    selectedBlockId={selectedBlockId}
+                                    selectedRowId={selectedRowId}
+                                    viewMode={viewMode}
+                                    isDragging={isDragging}
+                                    activeDropId={activeDropId}
+                                    onSelectBlock={handleSelectBlock}
+                                    onDeselectAll={handleDeselectAll}
+                                    onMoveRow={moveRow}
+                                    onMoveBlock={moveBlock}
+                                    onDeleteBlock={deleteBlock}
+                                    onDeleteRow={deleteRow}
+                                    onChangeRowColumns={changeRowColumns}
+                                    onAddBlockToRow={addBlockToRow}
+                                    onUpdateBlock={updateBlock}
+                                    onDoubleClickBlock={handleDoubleClickBlock}
+                                />
+                            </SortableContext>
+                            {!isMobile && (
+                                <div className="w-72 shrink-0 overflow-y-auto border-l border-border bg-card">
+                                    <PropertiesPanel
+                                        block={selectedBlock}
+                                        onUpdate={updateBlock}
+                                        template={template}
+                                        onUpdateTemplate={handleUpdateTemplate}
+                                    />
+                                </div>
+                            )}
+                        </>
+                    )}
+                </div>
+
+                <DragOverlay>
+                    {dragOverlay && (
+                        dragSource === 'palette'
+                            ? <PaletteDragPreview type={dragOverlay.type} />
+                            : (
+                                <div className="rounded-md border border-primary bg-white p-2 shadow-lg opacity-90 max-w-[300px]">
+                                    <BlockRenderer block={dragOverlay} />
+                                </div>
+                            )
+                    )}
+                </DragOverlay>
+            </DndContext>
+
+            {isMobile && !isEmpty && (
+                <Button
+                    onClick={() => setShowMobileProperties(true)}
+                    className="fixed bottom-4 right-4 z-40 shadow-lg"
+                    size="sm"
+                >
+                    <SlidersHorizontal className="mr-1.5 h-4 w-4" />
+                    Properties
+                </Button>
+            )}
+
+            <EmailBuilderSheet
+                open={showMobileProperties}
+                onOpenChange={setShowMobileProperties}
+                side="bottom"
+                className="h-[78vh] rounded-t-2xl"
+                title="Properties"
+                description="Edit block and template settings."
+            >
+                <PropertiesPanel
+                    block={selectedBlock}
+                    onUpdate={updateBlock}
+                    template={template}
+                    onUpdateTemplate={handleUpdateTemplate}
+                />
+            </EmailBuilderSheet>
+
+            <PreviewExportSheet
+                open={showPreviewExportSheet}
+                onOpenChange={setShowPreviewExportSheet}
+                includeGoogleFonts={includeGoogleFonts}
+                onIncludeGoogleFontsChange={setIncludeGoogleFonts}
+                exportFileName={exportFileName}
+                onExportFileNameChange={setExportFileName}
+                onOpenPreview={openPreview}
+                onOpenExport={openExport}
+            />
+
+            <PreviewModal
+                open={showPreview}
+                onOpenChange={setShowPreview}
+                template={template}
+                includeGoogleFonts={includeGoogleFonts}
+            />
+            <ExportModal
+                open={showExport}
+                onOpenChange={setShowExport}
+                template={template}
+                includeGoogleFonts={includeGoogleFonts}
+                fileName={exportFileName}
+            />
+            <UploadHtmlModal open={showUpload} onOpenChange={setShowUpload} onImport={handleImportTemplate} />
+            <AIGenerateModal open={showAIGenerate} onOpenChange={setShowAIGenerate} onGenerate={handleImportTemplate} />
+            <TemplatePickerModal open={showTemplates} onOpenChange={setShowTemplates} onSelectTemplate={handleImportTemplate} />
+
+            {editingImageBlockId && (() => {
+                const editingImageBlock = template.rows.flatMap((r) => r.blocks.flatMap((col) => col)).find((b) => b.id === editingImageBlockId);
+                const editingImageUrl =
+                    editingImageBlock?.type === 'image' ? editingImageBlock.src :
+                        (editingImageBlock?.type === 'hero' || editingImageBlock?.type === 'product-card') ? editingImageBlock.imageUrl : '';
+                return (
+                    <ImageEditorModal
+                        open={!!editingImageBlockId}
+                        onOpenChange={(open) => !open && setEditingImageBlockId(null)}
+                        currentSrc={editingImageUrl}
+                        onSave={(newSrc) => {
+                            if (editingImageBlock?.type === 'image') updateBlock(editingImageBlockId, { src: newSrc });
+                            else if (editingImageBlock?.type === 'hero' || editingImageBlock?.type === 'product-card') updateBlock(editingImageBlockId, { imageUrl: newSrc });
+                            setEditingImageBlockId(null);
+                        }}
+                    />
+                );
+            })()}
+        </div>
     );
 };
 
