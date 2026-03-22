@@ -9,6 +9,8 @@ import { AppLayout } from '@/components/layout/AppLayout';
 import DashboardPage from '@/pages/DashboardPage';
 import CreateCampaignPage from '@/pages/CreateCampaignPage';
 import CampaignBuilderPage from '@/pages/CampaignBuilderPage';
+import ContactsPage from '@/pages/ContactsPage';
+import FieldsPage from '@/pages/FieldsPage';
 import NotFound from '@/pages/NotFound';
 
 const queryClient = new QueryClient();
@@ -29,24 +31,20 @@ const App = () => (
                         <Routes>
                             <Route
                                 path="/"
-                                element={
-                                    <AppLayout>
-                                        <DashboardPage />
-                                    </AppLayout>
-                                }
+                                element={<AppLayout><DashboardPage /></AppLayout>}
                             />
                             <Route
                                 path="/campaigns/create"
-                                element={
-                                    <AppLayout>
-                                        <CreateCampaignPage />
-                                    </AppLayout>
-                                }
+                                element={<AppLayout><CreateCampaignPage /></AppLayout>}
                             />
-                            {/*
-                             * Builder route — full-screen, no AppLayout sidebar.
-                             * :campaignId can be a real ID (edit) or "new" (first time).
-                             */}
+                            <Route
+                                path="/lists"
+                                element={<AppLayout><ContactsPage /></AppLayout>}
+                            />
+                            <Route
+                                path="/fields"
+                                element={<AppLayout><FieldsPage /></AppLayout>}
+                            />
                             <Route
                                 path="/campaigns/:campaignId/content"
                                 element={<CampaignBuilderPage />}

@@ -4,7 +4,7 @@ import { useTheme } from 'next-themes';
 import {
     LayoutDashboard, Send, Users, BarChart2, Settings,
     ChevronLeft, ChevronRight, Mail, FileText, Zap,
-    Bell, Sun, Moon, ChevronDown,
+    Bell, Sun, Moon, ChevronDown, Database,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -16,13 +16,13 @@ import {
 import { useTranslation } from '@/hooks/useTranslation';
 import { Language } from '@/config/i18n/types';
 
-const LANGUAGE_OPTIONS: { code: Language; flag: string; label: string }[] = [
-    { code: 'en', flag: '🇬🇧', label: 'English' },
-    { code: 'ru', flag: '🇷🇺', label: 'Русский' },
-    { code: 'uk', flag: '🇺🇦', label: 'Українська' },
-    { code: 'it', flag: '🇮🇹', label: 'Italiano' },
-    { code: 'es', flag: '🇪🇸', label: 'Español' },
-    { code: 'fr', flag: '🇫🇷', label: 'Français' },
+const LANGUAGE_OPTIONS = [
+    { code: 'en' as const, flag: '🇬🇧', label: 'English' },
+    { code: 'ru' as const, flag: '🇷🇺', label: 'Русский' },
+    { code: 'uk' as const, flag: '🇺🇦', label: 'Українська' },
+    { code: 'it' as const, flag: '🇮🇹', label: 'Italiano' },
+    { code: 'es' as const, flag: '🇪🇸', label: 'Español' },
+    { code: 'fr' as const, flag: '🇫🇷', label: 'Français' },
 ];
 
 interface NavItem { label: string; to: string; icon: React.ElementType }
@@ -38,7 +38,8 @@ const NAV_SECTIONS: NavSection[] = [
             { label: 'Automations',   to: '/automations', icon: Zap },
         ]},
     { title: 'Contacts', items: [
-            { label: 'Lists', to: '/lists', icon: Users },
+            { label: 'Lists',         to: '/lists',   icon: Users },
+            { label: 'Field Manager', to: '/fields',  icon: Database },
         ]},
     { title: 'Reports', items: [
             { label: 'Analytics', to: '/analytics', icon: BarChart2 },
@@ -57,36 +58,18 @@ export function AppLayout({ children }: AppLayoutProps) {
     const currentLang = LANGUAGE_OPTIONS.find((l) => l.code === language);
 
     const handleToggleSidebar = useCallback(() => setCollapsed((v) => !v), []);
-    const handleToggleTheme = useCallback(
-        () => setTheme(isDark ? 'light' : 'dark'),
-        [isDark, setTheme],
-    );
+    const handleToggleTheme   = useCallback(() => setTheme(isDark ? 'light' : 'dark'), [isDark, setTheme]);
 
     return (
         <div className="flex h-screen overflow-hidden bg-canvas">
-            {/* ── Sidebar ── */}
-            <aside
-                className={cn(
-                    'relative flex shrink-0 flex-col border-r border-border bg-card transition-all duration-200',
-                    collapsed ? 'w-14' : 'w-56',
-                )}
-            >
-                {/* Logo */}
-                <div
-                    className={cn(
-                        'flex h-14 items-center border-b border-border px-4',
-                        collapsed ? 'justify-center' : 'gap-2.5',
-                    )}
-                >
+            <aside className={cn('relative flex shrink-0 flex-col border-r border-border bg-card transition-all duration-200', collapsed ? 'w-14' : 'w-56')}>
+                <div className={cn('flex h-14 items-center border-b border-border px-4', collapsed ? 'justify-center' : 'gap-2.5')}>
                     <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-primary">
                         <Mail className="h-4 w-4 text-primary-foreground" />
                     </div>
-                    {!collapsed && (
-                        <span className="text-sm font-semibold text-foreground">MailFlow</span>
-                    )}
+                    {!collapsed && <span className="text-sm font-semibold text-foreground">MailFlow</span>}
                 </div>
 
-                {/* Nav */}
                 <nav className="flex-1 overflow-y-auto py-4">
                     {NAV_SECTIONS.map((section) => (
                         <div key={section.title} className="mb-4">
@@ -97,96 +80,61 @@ export function AppLayout({ children }: AppLayoutProps) {
                             )}
                             {section.items.map((item) => {
                                 const Icon = item.icon;
-                                const isActive =
-                                    item.to === '/'
-                                        ? location.pathname === '/'
-                                        : location.pathname.startsWith(item.to);
-
+                                const isActive = item.to === '/' ? location.pathname === '/' : location.pathname.startsWith(item.to);
                                 const link = (
                                     <NavLink
                                         to={item.to}
                                         className={cn(
                                             'flex items-center gap-2.5 rounded-md px-3 py-2 text-sm font-medium transition-colors mx-2',
                                             collapsed && 'justify-center px-0 mx-2',
-                                            isActive
-                                                ? 'bg-primary/10 text-primary'
-                                                : 'text-muted-foreground hover:bg-secondary hover:text-foreground',
+                                            isActive ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-secondary hover:text-foreground',
                                         )}
                                     >
                                         <Icon className="h-4 w-4 shrink-0" />
-                                        {!collapsed && (
-                                            <span className="flex-1 truncate">{item.label}</span>
-                                        )}
+                                        {!collapsed && <span className="flex-1 truncate">{item.label}</span>}
                                     </NavLink>
                                 );
-
                                 return collapsed ? (
                                     <Tooltip key={item.to}>
                                         <TooltipTrigger asChild>{link}</TooltipTrigger>
                                         <TooltipContent side="right">{item.label}</TooltipContent>
                                     </Tooltip>
-                                ) : (
-                                    <div key={item.to}>{link}</div>
-                                );
+                                ) : <div key={item.to}>{link}</div>;
                             })}
                         </div>
                     ))}
                 </nav>
 
-                {/* Settings link */}
                 <div className="border-t border-border p-2">
                     {collapsed ? (
                         <Tooltip>
                             <TooltipTrigger asChild>
-                                <NavLink
-                                    to="/settings"
-                                    className="flex items-center justify-center rounded-md p-2 text-muted-foreground hover:bg-secondary hover:text-foreground"
-                                >
+                                <NavLink to="/settings" className="flex items-center justify-center rounded-md p-2 text-muted-foreground hover:bg-secondary hover:text-foreground">
                                     <Settings className="h-4 w-4" />
                                 </NavLink>
                             </TooltipTrigger>
                             <TooltipContent side="right">Settings</TooltipContent>
                         </Tooltip>
                     ) : (
-                        <NavLink
-                            to="/settings"
-                            className={cn(
-                                'flex items-center gap-2.5 rounded-md px-3 py-2 text-sm font-medium transition-colors',
-                                location.pathname === '/settings'
-                                    ? 'bg-primary/10 text-primary'
-                                    : 'text-muted-foreground hover:bg-secondary hover:text-foreground',
-                            )}
-                        >
+                        <NavLink to="/settings" className={cn('flex items-center gap-2.5 rounded-md px-3 py-2 text-sm font-medium transition-colors', location.pathname === '/settings' ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-secondary hover:text-foreground')}>
                             <Settings className="h-4 w-4 shrink-0" />
                             <span>Settings</span>
                         </NavLink>
                     )}
                 </div>
 
-                {/* Collapse toggle */}
-                <button
-                    onClick={handleToggleSidebar}
-                    className="absolute -right-3 top-[68px] z-10 flex h-6 w-6 items-center justify-center rounded-full border border-border bg-card text-muted-foreground shadow-sm transition-colors hover:bg-secondary"
-                >
+                <button onClick={handleToggleSidebar} className="absolute -right-3 top-[68px] z-10 flex h-6 w-6 items-center justify-center rounded-full border border-border bg-card text-muted-foreground shadow-sm transition-colors hover:bg-secondary">
                     {collapsed ? <ChevronRight className="h-3 w-3" /> : <ChevronLeft className="h-3 w-3" />}
                 </button>
             </aside>
 
-            {/* ── Main area ── */}
             <div className="flex flex-1 flex-col overflow-hidden">
-                {/* Header */}
                 <header className="flex h-14 shrink-0 items-center justify-between border-b border-border bg-card px-6">
                     <div id="page-title-slot" />
-
                     <div className="flex items-center gap-1">
-                        {/* Language switcher */}
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    className="h-8 gap-1.5 px-2 text-muted-foreground hover:text-foreground"
-                                >
+                                <Button variant="ghost" size="sm" className="h-8 gap-1.5 px-2 text-muted-foreground hover:text-foreground">
                                     <span className="text-base leading-none">{currentLang?.flag}</span>
                                     <span className="text-xs uppercase">{language}</span>
                                     <ChevronDown className="h-3 w-3" />
@@ -194,48 +142,26 @@ export function AppLayout({ children }: AppLayoutProps) {
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end" className="w-44">
                                 {LANGUAGE_OPTIONS.map(({ code, flag, label }) => (
-                                    <DropdownMenuItem
-                                        key={code}
-                                        onClick={() => setLanguage(code)}
-                                        className={language === code ? 'bg-accent' : ''}
-                                    >
+                                    <DropdownMenuItem key={code} onClick={() => setLanguage(code)} className={language === code ? 'bg-accent' : ''}>
                                         <span className="text-base mr-2">{flag}</span>
                                         <span>{label}</span>
                                     </DropdownMenuItem>
                                 ))}
                             </DropdownMenuContent>
                         </DropdownMenu>
-
-                        {/* Theme toggle */}
                         <Tooltip>
                             <TooltipTrigger asChild>
-                                <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="h-8 w-8"
-                                    onClick={handleToggleTheme}
-                                >
+                                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleToggleTheme}>
                                     {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
                                 </Button>
                             </TooltipTrigger>
                             <TooltipContent>{isDark ? 'Switch to light' : 'Switch to dark'}</TooltipContent>
                         </Tooltip>
-
-                        {/* Notifications */}
-                        <Button variant="ghost" size="icon" className="h-8 w-8">
-                            <Bell className="h-4 w-4" />
-                        </Button>
-
-                        {/* Avatar */}
-                        <div className="ml-1 flex h-7 w-7 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary">
-                            JD
-                        </div>
+                        <Button variant="ghost" size="icon" className="h-8 w-8"><Bell className="h-4 w-4" /></Button>
+                        <div className="ml-1 flex h-7 w-7 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary">JD</div>
                     </div>
                 </header>
-
-                <main className="flex-1 overflow-y-auto">
-                    {children}
-                </main>
+                <main className="flex-1 overflow-y-auto">{children}</main>
             </div>
         </div>
     );
