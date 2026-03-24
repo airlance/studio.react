@@ -12,6 +12,12 @@ Read and follow all conventions before making any changes.
 - **dnd-kit** for drag & drop (`@dnd-kit/core`, `@dnd-kit/sortable`)
 - **react-router-dom** v6
 - **@tanstack/react-query**
+- **lucide-react** (Icons)
+- **recharts** (Charts)
+- **react-hook-form** + **zod** (Forms & Validation)
+- **sonner** (Toasts)
+- **vaul** (Drawers)
+- **date-fns** (Date utilities)
 
 ---
 
@@ -20,60 +26,74 @@ Read and follow all conventions before making any changes.
 ```
 src/
 ├── components/
-│   └── email-builder/
-│       ├── blocks/                   # One subfolder per block type
-│       │   └── survey/               # Survey / Rating block
-│       │       ├── Renderer.tsx      # Canvas preview component
-│       │       ├── PropsPanel.tsx    # Properties panel component
-│       │       ├── exportHtml.ts     # HTML export for this block
-│       │       └── index.ts          # Barrel export
-│       ├── inline-editor/            # Inline contenteditable editor + toolbar
-│       ├── canvas/                   # Droppable email canvas helpers
-│       ├── index-page/               # Index page composition helpers (sidebar, DnD preview, metadata)
-│       ├── properties-panel/         # PropertiesPanel sub-panels and shared controls
-│       ├── BlockPalette.tsx          # Left panel: draggable block buttons
-│       ├── BlockRenderer.tsx         # Renders any EmailBlock to JSX
-│       ├── BuilderHeader.tsx         # Top bar: undo/redo, view toggle, actions
-│       ├── Canvas.tsx                # Center: droppable email canvas
-│       ├── PropertiesPanel.tsx       # Right panel: block & template settings
-│       ├── ExportModal.tsx
-│       ├── PreviewModal.tsx
-│       ├── UploadHtmlModal.tsx
-│       ├── AIGenerateModal.tsx
-│       ├── TemplatePickerModal.tsx
-│       └── WelcomeScreen.tsx
+│   ├── email-builder/                # Email Builder module
+│   │   ├── blocks/                   # One subfolder per block type
+│   │   │   └── survey/               # Survey / Rating block
+│   │   │       ├── Renderer.tsx      # Canvas preview component
+│   │   │       ├── PropsPanel.tsx    # Properties panel component
+│   │   │       ├── exportHtml.ts     # HTML export for this block
+│   │   │       └── index.ts          # Barrel export
+│   │   ├── inline-editor/            # Inline contenteditable editor + toolbar
+│   │   ├── canvas/                   # Droppable email canvas helpers
+│   │   ├── index-page/               # Index page composition helpers
+│   │   ├── properties-panel/         # PropertiesPanel sub-panels and shared controls
+│   │   ├── BlockPalette.tsx          # Left panel: draggable block buttons
+│   │   ├── BlockRenderer.tsx         # Renders any EmailBlock to JSX
+│   │   ├── BuilderHeader.tsx         # Top bar: undo/redo, view toggle, actions
+│   │   ├── Canvas.tsx                # Center: droppable email canvas
+│   │   ├── PropertiesPanel.tsx       # Right panel: block & template settings
+│   │   └── ...                       # Modals and other helpers
+│   ├── workflow-builder/             # Workflow Builder module
+│   │   ├── nodes/                    # Workflow node components
+│   │   ├── modals/                   # Node configuration modals
+│   │   ├── constants.ts              # Node types and categories
+│   │   ├── types.ts                  # Workflow types
+│   │   ├── utils.ts                  # Layout and logic helpers
+│   │   └── WorkflowBuilder.tsx       # Main builder component
+│   ├── dashboard/                    # Dashboard specific components
+│   ├── contacts/                     # Contacts management components
+│   ├── campaign-wizard/              # Campaign creation steps
+│   ├── fields/                       # Custom fields management
+│   ├── layout/                       # App shell, sidebar, navigation
+│   └── ui/                           # shadcn/ui shared components
 ├── config/
 │   ├── i18n/
-│   │   ├── context.tsx               # TranslationProvider component (component only)
-│   │   ├── types.ts                  # Language type + TranslationDictionary interface
-│   │   ├── en.ts / ru.ts / uk.ts     # Language dictionaries
-│   │   ├── it.ts / es.ts / fr.ts     # Language dictionaries
+│   │   ├── context.tsx               # TranslationProvider component
+│   │   ├── types.ts                  # i18n types
+│   │   └── en.ts / ru.ts / ...       # Language dictionaries
 │   ├── personalization.ts            # Merge tag variables config
-│   └── social-networks.ts            # ← single source of truth for social networks
+│   ├── social-networks.ts            # Social networks config
+│   ├── image-storage.ts              # Image upload & storage config
+│   └── stock-images.ts               # Predefined stock images
 ├── data/
 │   └── email-templates.ts            # Starter template definitions
 ├── hooks/
-│   ├── useEmailBuilder.ts            # Thin composer — public API, wires sub-hooks together
-│   ├── useTemplateHistory.ts         # Undo/redo state management
-│   ├── useBlockOps.ts                # Block-level CRUD + selection state
-│   ├── useRowOps.ts                  # Row-level CRUD
-│   ├── useTranslation.ts             # Translation hook (hook only, no component exports)
-│   └── createDefaultBlock.ts         # Factory: default values for every BlockType
+│   ├── useEmailBuilder.ts            # Main email builder hook
+│   ├── useTranslation.ts             # Translation hook
+│   └── ...                           # Other focused hooks
+├── lib/
+│   └── utils.ts                      # cn() helper for Tailwind (shadcn standard)
 ├── pages/
-│   ├── Index.tsx                     # Root page: wires everything together
+│   ├── DashboardPage.tsx             # Dashboard overview
+│   ├── ContactsPage.tsx              # Contacts CRM
+│   ├── AutomationsPage.tsx           # Workflows list
+│   ├── CampaignBuilderPage.tsx      # Campaign creation flow
+│   ├── FieldsPage.tsx                # Custom fields settings
+│   ├── Index.tsx                     # Email Builder (original root)
+│   ├── Workflow.tsx                  # Workflow Builder root
 │   └── NotFound.tsx
 ├── types/
-│   └── email-builder.ts              # All TypeScript types for blocks/template
+│   ├── email-builder.ts              # Email related types
+│   └── workflow-builder.ts           # Workflow related types
 └── utils/
     ├── uid.ts                        # Shared unique ID generator
-    ├── exportHtml.ts                 # Serializes EmailTemplate → HTML string
-    ├── parseHtml.ts                  # Parses uploaded HTML → EmailTemplate
-    └── aiTemplateMock.ts             # Mock AI template generator
+    ├── exportHtml.ts                 # Email HTML export logic
+    └── ...
 
 tests/
 ├── setup.ts                          # Vitest setup
-├── hooks/                            # Hook tests (mirror by feature/module)
-└── utils/                            # Utility tests (mirror by feature/module)
+├── hooks/                            # Hook tests
+└── utils/                            # Utility tests
 ```
 
 ---
@@ -139,6 +159,8 @@ feature flags). Always split them.
   Do not hardcode font lists in components or types.
 - **i18n language dictionaries** → `src/config/i18n/<lang>.ts` only.
   The `TranslationProvider` imports from these; nothing else should.
+- **Image storage** → `src/config/image-storage.ts` only.
+- **Stock images** → `src/config/stock-images.ts` only.
 
 ### Types
 - All block/template types live in `src/types/email-builder.ts`.
@@ -184,6 +206,9 @@ where JSDOM provides incomplete types — add `// JSDOM mock` comment on that li
 - Each block type that grows beyond a `case` statement belongs in its own folder
   under `src/components/email-builder/blocks/<type>/` with `Renderer.tsx`,
   `PropsPanel.tsx`, `exportHtml.ts`, and `index.ts`.
+- **Workflow nodes** belong in `src/components/workflow-builder/nodes/`.
+- **UI primitives** (buttons, inputs, etc.) from **shadcn/ui** live in `src/components/ui/`.
+  Always check `src/components/ui/` before creating a new basic UI component.
 
 ### Styling
 - Use **Tailwind utility classes** only — no inline style objects unless strictly necessary
@@ -233,6 +258,17 @@ where JSDOM provides incomplete types — add `// JSDOM mock` comment on that li
     - New rendering/interaction logic → component/integration tests where feasible
 - If a test is truly not feasible in the current task, explicitly document why in the final report.
 - **`any` is banned in tests** — see TypeScript strictness section above.
+
+---
+
+## Adding a New Workflow Node Type
+
+1. Add the type string to `WorkflowNodeType` union in `src/types/workflow-builder.ts`.
+2. Define the node data interface in the same file.
+3. Add a case in `createDefaultNode` (if exists) or equivalent factory.
+4. Create a component in `src/components/workflow-builder/nodes/` (e.g., `EmailNode.tsx`).
+5. Register the node in `src/components/workflow-builder/constants.ts` (NODE_TYPES configuration).
+6. Create/Update a configuration modal in `src/components/workflow-builder/modals/`.
 
 ---
 

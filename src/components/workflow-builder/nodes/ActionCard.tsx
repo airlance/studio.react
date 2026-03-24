@@ -1,0 +1,38 @@
+import { useState } from "react";
+import { Trash2, Zap, LucideIcon } from "lucide-react";
+import { WorkflowNode } from "../types";
+import { STYLES } from "../constants";
+
+interface ActionCardProps {
+    node: WorkflowNode;
+    onDelete: () => void;
+    onClick: () => void;
+    icon?: LucideIcon;
+    bg: string;
+    label: string;
+    sub: string;
+}
+
+export function ActionCard({ node, onDelete, onClick, icon: Icon = Zap, bg, label, sub }: ActionCardProps) {
+    const [hov, setHov] = useState(false);
+    return (
+        <div onClick={onClick} style={{ ...STYLES.card, position: "relative", cursor: "pointer" }} onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}>
+            {hov && (
+                <div style={{ position: "absolute", top: -32, right: 0, display: "flex", gap: 4, background: "#fff", border: "1px solid #e2e8f0", borderRadius: 6, padding: "4px 8px" }}>
+                    <button onClick={(e) => { e.stopPropagation(); onDelete(); }} style={{ background: "none", border: "none", cursor: "pointer", color: "#ef4444", display: "flex" }}>
+                        <Trash2 size={14} />
+                    </button>
+                </div>
+            )}
+            <div style={{ display: "flex", alignItems: "flex-start", gap: 12, padding: "12px 16px" }}>
+                <div style={{ width: 36, height: 36, borderRadius: "50%", background: bg, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                    <Icon size={16} color="#fff" />
+                </div>
+                <div>
+                    <div style={{ fontSize: 12, color: "#64748b" }}>{label}</div>
+                    <div style={{ fontSize: 14, fontWeight: 600, color: "#1e293b" }}>{sub}</div>
+                </div>
+            </div>
+        </div>
+    );
+}
