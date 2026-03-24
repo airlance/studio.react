@@ -60,7 +60,14 @@ export const STYLES = {
     line: { width: 2, background: "#cbd5e1", flexShrink: 0, alignSelf: "center" as const },
     card: {
         background: "#fff", border: "1px solid #e2e8f0", borderRadius: 8,
-        boxShadow: "0 1px 3px rgba(0,0,0,0.07)", minWidth: 240, maxWidth: 280,
+        boxShadow: "0 1px 3px rgba(0,0,0,0.07)", minWidth: 260, maxWidth: 300,
+        position: "relative" as const,
+    },
+    dropZone: {
+        width: 300, height: 60, borderRadius: 8,
+        border: "2px dashed #3b82f6", background: "rgba(59, 130, 246, 0.05)",
+        display: "flex", alignItems: "center", justifyContent: "center",
+        transition: "all 0.2s ease-in-out",
     },
     btn: (bg: string, color = "#fff") => ({
         background: bg, color, border: "none", borderRadius: 6, padding: "8px 18px",

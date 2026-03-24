@@ -62,7 +62,11 @@ export function RenderChain({ node, onAddTrigger, onAddAction, onDelete, onEdit 
                 )}
                 {!hasTriggers && <Line />}
 
-                <AddBtn onClick={() => onAddAction({ afterId: node.id })} />
+                <AddBtn 
+                    id={`add-after-${node.id}`} 
+                    onClick={() => onAddAction({ afterId: node.id })} 
+                    data={{ afterId: node.id }}
+                />
                 <Line />
                 <RenderChain node={node.next} onAddTrigger={onAddTrigger} onAddAction={onAddAction} onDelete={onDelete} onEdit={onEdit} />
             </>
@@ -74,7 +78,11 @@ export function RenderChain({ node, onAddTrigger, onAddAction, onDelete, onEdit 
             <>
                 <TriggerCard node={node} onDelete={() => onDelete(node.id)} onClick={() => onEdit(node)} />
                 <Line />
-                <AddBtn onClick={() => onAddAction({ afterId: node.id })} />
+                <AddBtn 
+                    id={`add-after-${node.id}`} 
+                    onClick={() => onAddAction({ afterId: node.id })} 
+                    data={{ afterId: node.id }}
+                />
                 <Line />
                 <RenderChain node={node.next} onAddTrigger={onAddTrigger} onAddAction={onAddAction} onDelete={onDelete} onEdit={onEdit} />
             </>
@@ -86,7 +94,11 @@ export function RenderChain({ node, onAddTrigger, onAddAction, onDelete, onEdit 
             <>
                 <WaitCard node={node} onDelete={() => onDelete(node.id)} onClick={() => onEdit(node)} />
                 <Line />
-                <AddBtn onClick={() => onAddAction({ afterId: node.id })} />
+                <AddBtn 
+                    id={`add-after-${node.id}`} 
+                    onClick={() => onAddAction({ afterId: node.id })} 
+                    data={{ afterId: node.id }}
+                />
                 <Line />
                 <RenderChain node={node.next} onAddTrigger={onAddTrigger} onAddAction={onAddAction} onDelete={onDelete} onEdit={onEdit} />
             </>
@@ -112,7 +124,11 @@ export function RenderChain({ node, onAddTrigger, onAddAction, onDelete, onEdit 
                     <div style={{ width: BW, display: "flex", flexDirection: "column", alignItems: "center" }}>
                         <BranchBadge label="Yes" color="#16a34a" />
                         <Line />
-                        <AddBtn onClick={() => onAddAction({ ifelseId: node.id, branch: "yes" })} />
+                        <AddBtn 
+                            id={`add-ifelse-${node.id}-yes`} 
+                            onClick={() => onAddAction({ ifelseId: node.id, branch: "yes" })} 
+                            data={{ ifelseId: node.id, branch: "yes" }}
+                        />
                         <Line />
                         <RenderChain node={node.yes} onAddTrigger={onAddTrigger} onAddAction={onAddAction} onDelete={onDelete} onEdit={onEdit} />
                     </div>
@@ -120,7 +136,11 @@ export function RenderChain({ node, onAddTrigger, onAddAction, onDelete, onEdit 
                     <div style={{ width: BW, display: "flex", flexDirection: "column", alignItems: "center" }}>
                         <BranchBadge label="No" color="#dc2626" />
                         <Line />
-                        <AddBtn onClick={() => onAddAction({ ifelseId: node.id, branch: "no" })} />
+                        <AddBtn 
+                            id={`add-ifelse-${node.id}-no`} 
+                            onClick={() => onAddAction({ ifelseId: node.id, branch: "no" })} 
+                            data={{ ifelseId: node.id, branch: "no" }}
+                        />
                         <Line />
                         <RenderChain node={node.no} onAddTrigger={onAddTrigger} onAddAction={onAddAction} onDelete={onDelete} onEdit={onEdit} />
                     </div>
@@ -147,7 +167,11 @@ export function RenderChain({ node, onAddTrigger, onAddAction, onDelete, onEdit 
                 onClick={() => onEdit(node)}
             />
             <Line />
-            <AddBtn onClick={() => onAddAction({ afterId: node.id })} />
+            <AddBtn 
+                id={`add-after-${node.id}`} 
+                onClick={() => onAddAction({ afterId: node.id })} 
+                data={{ afterId: node.id }}
+            />
             <Line />
             <RenderChain node={node.next} onAddTrigger={onAddTrigger} onAddAction={onAddAction} onDelete={onDelete} onEdit={onEdit} />
         </>

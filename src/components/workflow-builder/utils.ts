@@ -1,6 +1,12 @@
 import { WorkflowNode, NodeConfig, NodeType } from "./types";
 import { uid as generateUid } from "@/utils/uid";
 
+export interface DropTarget {
+    afterId?: string;
+    ifelseId?: string;
+    branch?: "yes" | "no";
+}
+
 export const uid = () => generateUid('n');
 
 export const makeEnd = (): WorkflowNode => ({ id: uid(), type: "end" });
@@ -49,6 +55,51 @@ export const deleteNode = (root: WorkflowNode | null | undefined, targetId: stri
         yes: deleteNode(root.yes, targetId) as WorkflowNode,
         no: deleteNode(root.no, targetId) as WorkflowNode,
     };
+};
+
+export const findNode = (root: WorkflowNode | null | undefined, id: string): WorkflowNode | null => {
+    if (!root) return null;
+    if (root.id === id) return root;
+    let found = findNode(root.next, id);
+    if (found) return found;
+    if (root.triggers) {
+        for (const t of root.triggers) {
+            found = findNode(t, id);
+            if (found) return found;
+        }
+    }
+    if (root.yes) found = findNode(root.yes, id);
+    if (found) return found;
+    if (root.no) found = findNode(root.no, id);
+    return found;
+};
+
+export const moveNode = (root: WorkflowNode, nodeId: string, target: DropTarget): WorkflowNode => {
+    // 1. Find the node to move
+    const nodeToMove = findNode(root, nodeId);
+    if (!nodeToMove) return root;
+
+    // 2. Prevent dropping onto itself or its children
+    if (target.afterId === nodeId || target.ifelseId === nodeId) return root;
+    // (A more thorough check would be isDescendant(nodeToMove, target))
+
+    // 3. Remove from old position
+    const cleaned = deleteNode(root, nodeId) as WorkflowNode;
+
+    // 4. Insert into new position
+    if (target.branch && target.ifelseId) {
+        return mapNode(cleaned, target.ifelseId, (n) => ({
+            ...n,
+            [target.branch!]: { ...nodeToMove, next: n[target.branch!] as WorkflowNode },
+        })) as WorkflowNode;
+    } else if (target.afterId) {
+        return mapNode(cleaned, target.afterId, (n) => ({
+            ...n,
+            next: { ...nodeToMove, next: n.next as WorkflowNode },
+        })) as WorkflowNode;
+    }
+
+    return cleaned;
 };
 
 export const createInitial = (): WorkflowNode => ({ id: "root", type: "workflow", triggers: [], next: makeEnd() });
