@@ -17,6 +17,8 @@ import FormBuilderPage from '@/pages/FormBuilderPage';
 import NotFound from '@/pages/NotFound';
 import WorkflowBuilderPage from "@/pages/Workflow";
 import TrackingPage from '@/pages/TrackingPage';
+import TagsPage from '@/pages/TagsPage';
+import StorageManagerPage from '@/pages/StorageManagerPage';
 
 const queryClient = new QueryClient();
 
@@ -53,6 +55,14 @@ const App = () => (
                             <Route
                                 path="/tracking"
                                 element={<AppLayout><TrackingPage /></AppLayout>}
+                            />
+                            <Route
+                                path="/tags"
+                                element={<AppLayout><TagsPage /></AppLayout>}
+                            />
+                            <Route
+                                path="/storage"
+                                element={<AppLayout><StorageManagerPage /></AppLayout>}
                             />
                             {/* ── Forms ── */}
                             <Route
