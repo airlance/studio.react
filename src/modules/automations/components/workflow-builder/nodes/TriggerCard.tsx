@@ -1,12 +1,11 @@
-import { useState } from "react";
-import { Eye, Trash2 } from "lucide-react";
+import { Eye } from "lucide-react";
 import { useDraggable } from "@dnd-kit/core";
 import { CSS } from "@dnd-kit/utilities";
 import { WorkflowNode } from "@/types/automation";
 import { TRIGGERS, TRIGGER_LABEL } from "@/constants/automation";
+import { NodeCardMenu } from "../components/NodeCardMenu.tsx";
 
 export function TriggerCard({ node, onDelete, onClick }: { node: WorkflowNode; onDelete: () => void; onClick: () => void }) {
-    const [hov, setHov] = useState(false);
     const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
         id: node.id,
         data: { node },
@@ -30,17 +29,8 @@ export function TriggerCard({ node, onDelete, onClick }: { node: WorkflowNode; o
             onClick={onClick}
             style={dragStyle}
             className="relative bg-white border border-slate-200 rounded-lg min-w-[260px] max-w-[300px] shadow-[0_1px_3px_rgba(0,0,0,0.07)] cursor-grab"
-            onMouseEnter={() => setHov(true)}
-            onMouseLeave={() => setHov(false)}
         >
-            {hov && !isDragging && (
-                <button
-                    onClick={(e) => { e.stopPropagation(); onDelete(); }}
-                    className="absolute top-2 right-2 bg-white border border-slate-200 rounded-full size-6 flex items-center justify-center cursor-pointer text-red-500 shadow-[0_1px_2px_rgba(0,0,0,0.1)]"
-                >
-                    <Trash2 size={12} />
-                </button>
-            )}
+            {!isDragging && <NodeCardMenu onEdit={onClick} onDelete={onDelete} />}
             <div className="flex items-start gap-3 px-5 py-4">
                 <div className="size-10 rounded-full bg-[#1e3a5f] flex items-center justify-center shrink-0">
                     <Icon size={18} color="#fff" />

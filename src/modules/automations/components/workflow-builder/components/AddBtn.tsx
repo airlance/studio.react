@@ -13,6 +13,12 @@ interface AddBtnProps {
 export function AddBtn({ id, onClick, active, data }: AddBtnProps) {
     const { isOver, setNodeRef } = useDroppable({ id, data });
     const { active: activeDrag } = useDndContext();
+    const activeData = activeDrag?.data.current as { dragType?: string } | undefined;
+    const isMatchBranchDrag = activeData?.dragType === "match-branch";
+
+    if (isMatchBranchDrag) {
+        return <div className="h-8" />;
+    }
 
     if (activeDrag) {
         return (

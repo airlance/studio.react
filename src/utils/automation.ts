@@ -128,6 +128,33 @@ export const insertMatchBranchStart = (
         };
     }) as WorkflowNode;
 
+export const reorderMatchBranches = (
+    root: WorkflowNode,
+    matchId: string,
+    activeBranchId: string,
+    overBranchId: string,
+): WorkflowNode =>
+    mapNode(root, matchId, (node) => {
+        if (node.type !== "match" || !node.matchBranches) {
+            return node;
+        }
+
+        const fromIndex = node.matchBranches.findIndex((branch) => branch.id === activeBranchId);
+        const toIndex = node.matchBranches.findIndex((branch) => branch.id === overBranchId);
+        if (fromIndex < 0 || toIndex < 0 || fromIndex === toIndex) {
+            return node;
+        }
+
+        const reordered = [...node.matchBranches];
+        const [moved] = reordered.splice(fromIndex, 1);
+        reordered.splice(toIndex, 0, moved);
+
+        return {
+            ...node,
+            matchBranches: reordered,
+        };
+    }) as WorkflowNode;
+
 export const deleteNode = (root: WorkflowNode | null | undefined, targetId: string): WorkflowNode | null => {
     if (!root) return null;
     if (root.type === "workflow") {

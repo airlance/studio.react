@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { useHeaderSlot } from '@/layout/components/header-slot-context';
 import { Content } from '@/layout/components/content';
 import { WorkflowNode, TriggerOption, ActionOption, NodeConfig, NodeType } from "@/types/automation";
-import { createInitial, mapNode, insertAfterNode, insertBranchStart, insertMatchBranchStart, deleteNode, moveNode, uid, DropTarget } from "@/utils/automation";
+import { createInitial, mapNode, insertAfterNode, insertBranchStart, insertMatchBranchStart, reorderMatchBranches, deleteNode, moveNode, uid, DropTarget } from "@/utils/automation";
 import { TRIGGERS } from "@/constants/automation";
 import { WORKFLOW_RECIPES } from "@/mocks/automation";
 import { SidePanelButton } from "../../components/workflow-builder/components/SidePanelButton.tsx";
@@ -37,6 +37,12 @@ type ModalState =
     | { type: "add_action"; ctx: DropTarget }
     | { type: ConfigureActionModalType; node?: WorkflowNode; ctx?: DropTarget }
     | { type: "show_json" };
+
+interface MatchBranchDragData {
+    dragType: "match-branch";
+    branchId: string;
+    matchId: string;
+}
 
 const ACTION_MODAL_BY_ID: Record<string, ConfigureActionModalType> = {
     wait: "configure_wait",
@@ -71,6 +77,15 @@ const isDropTarget = (value: unknown): value is DropTarget => {
     }
 
     return typeof target.matchId === "string" && typeof target.matchBranchId === "string";
+};
+
+const isMatchBranchDragData = (value: unknown): value is MatchBranchDragData => {
+    if (!value || typeof value !== "object") {
+        return false;
+    }
+
+    const data = value as Partial<MatchBranchDragData>;
+    return data.dragType === "match-branch" && typeof data.branchId === "string" && typeof data.matchId === "string";
 };
 
 export default function WorkflowBuilderPage() {
@@ -255,6 +270,16 @@ export default function WorkflowBuilderPage() {
     const handleDragEnd = (event: DragEndEvent) => {
         const { active, over } = event;
         if (over && active.id !== over.id) {
+            const activeData = active.data.current;
+            const overData = over.data.current;
+
+            if (isMatchBranchDragData(activeData) && isMatchBranchDragData(overData)) {
+                if (activeData.matchId === overData.matchId && activeData.branchId !== overData.branchId) {
+                    setFlow((f) => reorderMatchBranches(f, activeData.matchId, activeData.branchId, overData.branchId));
+                }
+                return;
+            }
+
             if (typeof active.id !== "string") {
                 return;
             }

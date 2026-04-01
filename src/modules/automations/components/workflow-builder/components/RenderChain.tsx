@@ -12,6 +12,8 @@ import { PlaceholderCard } from "../nodes/PlaceholderCard.tsx";
 import { ALL_ACTIONS } from "@/constants/automation";
 import { Zap } from "lucide-react";
 import { DropTarget } from "@/utils/automation";
+import { SortableContext, horizontalListSortingStrategy } from "@dnd-kit/sortable";
+import { SortableMatchBranchBadge } from "./SortableMatchBranchBadge.tsx";
 
 interface RenderChainProps {
     node: WorkflowNode | null | undefined;
@@ -240,21 +242,27 @@ export function RenderChain({ node, onAddTrigger, onAddAction, onDelete, onEdit 
                                 ))}
                             </div>
                         </div>
-                        <div className="flex items-start -mt-0.5" style={{ gap: branchGap }}>
-                            {branches.map((branch, index) => (
-                                <div key={branch.id} className="flex flex-col items-center" style={{ width: branchWidths[index] }}>
-                                    <BranchBadge label={branch.label} color="#4f46e5" variant="rectangle" />
-                                    <Line />
-                                    <AddBtn
-                                        id={`add-match-${node.id}-${branch.id}`}
-                                        onClick={() => onAddAction({ matchId: node.id, matchBranchId: branch.id })}
-                                        data={{ matchId: node.id, matchBranchId: branch.id }}
-                                    />
-                                    <Line />
-                                    <RenderChain node={branch.next} onAddTrigger={onAddTrigger} onAddAction={onAddAction} onDelete={onDelete} onEdit={onEdit} />
-                                </div>
-                            ))}
-                        </div>
+                        <SortableContext items={branches.map((currentBranch) => currentBranch.id)} strategy={horizontalListSortingStrategy}>
+                            <div className="flex items-start -mt-0.5" style={{ gap: branchGap }}>
+                                {branches.map((branch, index) => (
+                                    <div key={branch.id} className="flex flex-col items-center" style={{ width: branchWidths[index] }}>
+                                        <SortableMatchBranchBadge
+                                            branchId={branch.id}
+                                            matchId={node.id}
+                                            label={branch.label}
+                                        />
+                                        <Line />
+                                        <AddBtn
+                                            id={`add-match-${node.id}-${branch.id}`}
+                                            onClick={() => onAddAction({ matchId: node.id, matchBranchId: branch.id })}
+                                            data={{ matchId: node.id, matchBranchId: branch.id }}
+                                        />
+                                        <Line />
+                                        <RenderChain node={branch.next} onAddTrigger={onAddTrigger} onAddAction={onAddAction} onDelete={onDelete} onEdit={onEdit} />
+                                    </div>
+                                ))}
+                            </div>
+                        </SortableContext>
                     </>
                 ) : (
                     <>
