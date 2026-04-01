@@ -1,17 +1,15 @@
 import { useState } from "react";
-import { GitBranch, Trash2 } from "lucide-react";
+import { Split, Trash2 } from "lucide-react";
 import { useDraggable } from "@dnd-kit/core";
 import { CSS } from "@dnd-kit/utilities";
 import { WorkflowNode } from "@/types/automation";
 
-export function IfElseCard({ node, onDelete, onClick }: { node: WorkflowNode; onDelete: () => void; onClick: () => void }) {
+export function MatchCard({ node, onDelete, onClick }: { node: WorkflowNode; onDelete: () => void; onClick: () => void }) {
     const [hov, setHov] = useState(false);
     const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
         id: node.id,
         data: { node },
     });
-
-    const c = node.config || {};
 
     const dragStyle = {
         transform: CSS.Translate.toString(transform),
@@ -19,15 +17,17 @@ export function IfElseCard({ node, onDelete, onClick }: { node: WorkflowNode; on
         zIndex: isDragging ? 999 : 1,
     };
 
+    const branchCount = node.matchBranches?.length || 0;
+
     return (
-        <div 
+        <div
             ref={setNodeRef}
             {...listeners}
             {...attributes}
-            onClick={onClick} 
+            onClick={onClick}
             style={dragStyle}
             className="relative bg-white border border-slate-200 rounded-lg min-w-[260px] max-w-[300px] shadow-[0_1px_3px_rgba(0,0,0,0.07)] cursor-grab"
-            onMouseEnter={() => setHov(true)} 
+            onMouseEnter={() => setHov(true)}
             onMouseLeave={() => setHov(false)}
         >
             {hov && !isDragging && (
@@ -39,16 +39,14 @@ export function IfElseCard({ node, onDelete, onClick }: { node: WorkflowNode; on
                 </button>
             )}
             <div className="flex items-start gap-3 px-5 py-4">
-                <div className="size-10 rounded-full bg-slate-700 flex items-center justify-center shrink-0">
-                    <GitBranch size={18} color="#fff" />
+                <div className="size-10 rounded-full bg-indigo-600 flex items-center justify-center shrink-0">
+                    <Split size={18} color="#fff" />
                 </div>
                 <div>
-                    <div className="text-sm font-semibold text-slate-800 leading-[1.4]">Does contact match these conditions?</div>
-                    {c.field && (
-                        <div className="text-xs text-slate-500 mt-1">
-                            {c.field} {c.op?.toLowerCase()} {c.value}
-                        </div>
-                    )}
+                    <div className="text-sm font-semibold text-slate-800 leading-[1.4]">Match conditions</div>
+                    <div className="text-xs text-slate-500 mt-1">
+                        {branchCount} branch{branchCount === 1 ? "" : "es"}
+                    </div>
                 </div>
             </div>
         </div>

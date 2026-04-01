@@ -1,5 +1,3 @@
-import { STYLES } from "@/constants/automation";
-
 export function Line({ h = 28 }: { h?: number }) {
-    return <div style={{ ...STYLES.line, height: h }} />;
+    return <div className="w-0.5 bg-slate-300 shrink-0 self-center" style={{ height: h }} />;
 }

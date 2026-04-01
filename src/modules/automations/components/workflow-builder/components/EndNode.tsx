@@ -1,8 +1,8 @@
 export function EndNode() {
     return (
-        <div style={{ display: "flex", alignItems: "center", gap: 8, color: "#94a3b8", fontSize: 13, fontWeight: 500, padding: "4px 0" }}>
-            <div style={{ width: 18, height: 18, borderRadius: "50%", border: "2px solid #94a3b8", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <div style={{ width: 10, height: 2, background: "#94a3b8", borderRadius: 2 }} />
+        <div className="flex items-center gap-2 text-slate-400 text-sm font-medium py-1">
+            <div className="size-[18px] rounded-full border-2 border-slate-400 flex items-center justify-center">
+                <div className="w-[10px] h-0.5 bg-slate-400 rounded-sm" />
             </div>
             End
         </div>

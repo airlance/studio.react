@@ -5,6 +5,7 @@ export type NodeType =
     | "trigger"
     | "wait"
     | "ifelse"
+    | "match"
     | "send_email"
     | "webhook"
     | "add_tag"
@@ -23,7 +24,14 @@ export interface NodeConfig {
     url?: string;
     tag?: string;
     runs?: string;
-    [key: string]: any;
+    cases?: string[];
+    [key: string]: unknown;
+}
+
+export interface MatchBranch {
+    id: string;
+    label: string;
+    next: WorkflowNode | null;
 }
 
 export interface WorkflowNode {
@@ -34,6 +42,7 @@ export interface WorkflowNode {
     next?: WorkflowNode;
     yes?: WorkflowNode | null;
     no?: WorkflowNode | null;
+    matchBranches?: MatchBranch[];
 }
 
 export interface TriggerOption {

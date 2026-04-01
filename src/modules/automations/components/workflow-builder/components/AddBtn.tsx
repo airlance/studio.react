@@ -1,8 +1,6 @@
-import { useState } from "react";
 import { Plus } from "lucide-react";
 import type { UniqueIdentifier } from "@dnd-kit/core";
 import { useDroppable, useDndContext } from "@dnd-kit/core";
-import { STYLES } from "@/constants/automation";
 import { DropTarget } from "@/utils/automation";
 
 interface AddBtnProps {
@@ -13,7 +11,6 @@ interface AddBtnProps {
 }
 
 export function AddBtn({ id, onClick, active, data }: AddBtnProps) {
-    const [hov, setHov] = useState(false);
     const { isOver, setNodeRef } = useDroppable({ id, data });
     const { active: activeDrag } = useDndContext();
 
@@ -21,11 +18,9 @@ export function AddBtn({ id, onClick, active, data }: AddBtnProps) {
         return (
             <div
                 ref={setNodeRef}
-                style={{
-                    ...STYLES.dropZone,
-                    border: isOver ? "2px solid #3b82f6" : STYLES.dropZone.border,
-                    background: isOver ? "rgba(59, 130, 246, 0.1)" : STYLES.dropZone.background,
-                }}
+                className={`w-[300px] h-12 rounded-lg flex items-center justify-center text-xs font-medium my-2 border-2 border-dashed text-blue-500 transition-colors ${
+                    isOver ? "border-blue-500 bg-blue-500/10" : "border-blue-500 bg-blue-500/5"
+                }`}
             >
                 {isOver ? "Drop here" : "Move here"}
             </div>
@@ -33,28 +28,15 @@ export function AddBtn({ id, onClick, active, data }: AddBtnProps) {
     }
 
     return (
-        <div style={{
-            height: activeDrag ? 48 : 32,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            transition: "height 0.2s ease-in-out",
-            overflow: "hidden"
-        }}>
+        <div className="h-8 flex items-center justify-center transition-[height] duration-200 overflow-hidden">
             <button
                 ref={setNodeRef}
                 onClick={onClick}
-                onMouseEnter={() => setHov(true)}
-                onMouseLeave={() => setHov(false)}
-                style={{
-                    width: 24, height: 24, borderRadius: "50%",
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    border: `1px solid ${hov || active ? "#3b82f6" : "#e2e8f0"}`,
-                    background: hov || active ? "#3b82f6" : "#fff",
-                    color: hov || active ? "#fff" : "#94a3b8",
-                    cursor: "pointer", transition: "all 0.15s",
-                    boxShadow: hov || active ? "0 0 0 4px rgba(59, 130, 246, 0.1)" : "none"
-                }}
+                className={`size-6 rounded-full border flex items-center justify-center cursor-pointer transition-all ${
+                    active
+                        ? "border-blue-500 bg-blue-500 text-white shadow-[0_0_0_4px_rgba(59,130,246,0.1)]"
+                        : "border-slate-200 bg-white text-slate-400 hover:border-blue-500 hover:bg-blue-500 hover:text-white hover:shadow-[0_0_0_4px_rgba(59,130,246,0.1)]"
+                }`}
             >
                 <Plus size={12} />
             </button>

@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { useHeaderSlot } from '@/layout/components/header-slot-context';
 import { Content } from '@/layout/components/content';
 import { WorkflowNode, TriggerOption, ActionOption, NodeConfig, NodeType } from "@/types/automation";
-import { createInitial, mapNode, insertAfterNode, insertBranchStart, deleteNode, moveNode, uid, DropTarget } from "@/utils/automation";
+import { createInitial, mapNode, insertAfterNode, insertBranchStart, insertMatchBranchStart, deleteNode, moveNode, uid, DropTarget } from "@/utils/automation";
 import { TRIGGERS } from "@/constants/automation";
 import { WORKFLOW_RECIPES } from "@/mocks/automation";
 import { SidePanelButton } from "../../components/workflow-builder/components/SidePanelButton.tsx";
@@ -18,6 +18,7 @@ import { ConfigureTriggerModal } from "../../components/workflow-builder/modals/
 import { AddActionModal } from "../../components/workflow-builder/modals/AddActionModal.tsx";
 import { ConfigureWaitModal } from "../../components/workflow-builder/modals/ConfigureWaitModal.tsx";
 import { ConfigureIfElseModal } from "../../components/workflow-builder/modals/ConfigureIfElseModal.tsx";
+import { ConfigureMatchModal } from "../../components/workflow-builder/modals/ConfigureMatchModal.tsx";
 import { ConfigureEmailModal } from "../../components/workflow-builder/modals/ConfigureEmailModal.tsx";
 import { ConfigureWebhookModal } from "../../components/workflow-builder/modals/ConfigureWebhookModal.tsx";
 import { ContentHeader } from '@/layout/components/content-header';
@@ -25,6 +26,7 @@ import { ContentHeader } from '@/layout/components/content-header';
 type ConfigureActionModalType =
     | "configure_wait"
     | "configure_ifelse"
+    | "configure_match"
     | "configure_send_email"
     | "configure_webhook";
 
@@ -39,6 +41,7 @@ type ModalState =
 const ACTION_MODAL_BY_ID: Record<string, ConfigureActionModalType> = {
     wait: "configure_wait",
     ifelse: "configure_ifelse",
+    match: "configure_match",
     send_email: "configure_send_email",
     webhook: "configure_webhook",
     add_tag: "configure_send_email",
@@ -48,6 +51,7 @@ const ACTION_MODAL_BY_ID: Record<string, ConfigureActionModalType> = {
 const ACTION_NODE_TYPE_BY_MODAL: Record<ConfigureActionModalType, NodeType> = {
     configure_wait: "wait",
     configure_ifelse: "ifelse",
+    configure_match: "match",
     configure_send_email: "send_email",
     configure_webhook: "webhook",
 };
@@ -62,7 +66,11 @@ const isDropTarget = (value: unknown): value is DropTarget => {
         return true;
     }
 
-    return typeof target.ifelseId === "string" && (target.branch === "yes" || target.branch === "no");
+    if (typeof target.ifelseId === "string" && (target.branch === "yes" || target.branch === "no")) {
+        return true;
+    }
+
+    return typeof target.matchId === "string" && typeof target.matchBranchId === "string";
 };
 
 export default function WorkflowBuilderPage() {
@@ -162,6 +170,7 @@ export default function WorkflowBuilderPage() {
             trigger: "configure_trigger",
             wait: "configure_wait",
             ifelse: "configure_ifelse",
+            match: "configure_match",
             send_email: "configure_send_email",
             webhook: "configure_webhook",
             add_tag: "configure_send_email",
@@ -185,6 +194,7 @@ export default function WorkflowBuilderPage() {
         if (
             modalType === "configure_wait" ||
             modalType === "configure_ifelse" ||
+            modalType === "configure_match" ||
             modalType === "configure_send_email" ||
             modalType === "configure_webhook"
         ) {
@@ -197,6 +207,10 @@ export default function WorkflowBuilderPage() {
             const ifelseId = ctx.ifelseId;
             const branch = ctx.branch;
             setFlow((f) => insertBranchStart(f, ifelseId, branch, type, config));
+        } else if (ctx.matchId && ctx.matchBranchId) {
+            const matchId = ctx.matchId;
+            const matchBranchId = ctx.matchBranchId;
+            setFlow((f) => insertMatchBranchStart(f, matchId, matchBranchId, type, config));
         } else if (ctx.afterId) {
             const afterId = ctx.afterId;
             setFlow((f) => insertAfterNode(f, afterId, type, config));
@@ -212,6 +226,7 @@ export default function WorkflowBuilderPage() {
         if (
             modal.type !== "configure_wait" &&
             modal.type !== "configure_ifelse" &&
+            modal.type !== "configure_match" &&
             modal.type !== "configure_send_email" &&
             modal.type !== "configure_webhook"
         ) {
@@ -316,25 +331,25 @@ export default function WorkflowBuilderPage() {
                 </h1>
 
                 <div className="flex items-center gap-2.5">
-                    <div style={{ display: "flex", borderRadius: 20, overflow: "hidden", border: "1px solid #334155" }}>
-                        <button style={{ padding: "5px 14px", fontSize: 12, background: "#16a34a", color: "#fff", border: "none", cursor: "pointer", fontWeight: 500 }}>Active</button>
-                        <button style={{ padding: "5px 14px", fontSize: 12, background: "transparent", color: "#64748b", border: "none", cursor: "pointer" }}>Inactive</button>
+                    <div className="flex rounded-full overflow-hidden border border-slate-700">
+                        <button className="px-3.5 py-1 text-xs bg-green-600 text-white font-medium">Active</button>
+                        <button className="px-3.5 py-1 text-xs bg-transparent text-slate-500">Inactive</button>
                     </div>
                 </div>
             </ContentHeader>
             <Content className="block py-0">
                 <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
-                    <div style={{ display: "flex", flexDirection: "column", height: "100vh", fontFamily: "system-ui, -apple-system, sans-serif", position: "relative", overflow: "hidden" }}>
-                        <div style={{
-                            flex: 1,
-                            background: "#f0f4f8",
-                            backgroundImage: "radial-gradient(circle, #c8d6e5 1.5px, transparent 1.5px)",
-                            backgroundSize: "24px 24px",
-                            display: "flex", justifyContent: "center", alignItems: "flex-start",
-                            padding: "60px 40px 80px", overflow: "auto", gap: 24,
-                        }}>
+                    <div className="flex flex-col h-screen relative overflow-hidden">
+                        <div
+                            className="flex-1 flex justify-center items-start p-[60px_40px_80px] overflow-auto gap-6"
+                            style={{
+                                background: "#f0f4f8",
+                                backgroundImage: "radial-gradient(circle, #c8d6e5 1.5px, transparent 1.5px)",
+                                backgroundSize: "24px 24px",
+                            }}
+                        >
                             {/* Main flow column */}
-                            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", minWidth: 800 }}>
+                            <div className="flex flex-col items-center min-w-[800px]">
                                 <RenderChain
                                     node={flow}
                                     onAddTrigger={openAddTrigger}
@@ -345,7 +360,7 @@ export default function WorkflowBuilderPage() {
                             </div>
 
                             {/* Right side panels */}
-                            <div style={{ display: "flex", flexDirection: "column", gap: 10, paddingTop: 0 }}>
+                            <div className="flex flex-col gap-2.5 pt-0">
                                 {hasRealTrigger && <SidePanelButton label="Add another start trigger" onClick={openAddTrigger} />}
                                 <SidePanelButton label="Add contacts to this automation" />
                             </div>
@@ -378,6 +393,15 @@ export default function WorkflowBuilderPage() {
                         {modal?.type === "configure_ifelse" && (
                             <ConfigureIfElseModal
                                 config={modal.node?.config}
+                                onSave={handleSaveAction}
+                                onBack={() => setModal(modal.node || !modal.ctx ? null : { type: "add_action", ctx: modal.ctx })}
+                                onClose={closeModal}
+                            />
+                        )}
+                        {modal?.type === "configure_match" && (
+                            <ConfigureMatchModal
+                                config={modal.node?.config}
+                                branches={modal.node?.matchBranches}
                                 onSave={handleSaveAction}
                                 onBack={() => setModal(modal.node || !modal.ctx ? null : { type: "add_action", ctx: modal.ctx })}
                                 onClose={closeModal}

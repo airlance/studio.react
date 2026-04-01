@@ -1,6 +1,6 @@
 import {
     List, FileText, Eye, MousePointer, Video, Share2,
-    Tag, Clock, GitBranch, Mail, Link2, BellRing
+    Tag, Clock, GitBranch, Mail, Link2, BellRing, Split
 } from "lucide-react";
 import { TriggerOption, ActionOption } from "@/types/automation";
 
@@ -44,6 +44,7 @@ export const ACTION_TABS = ["Suggested", "Sending", "Workflow", "Contacts", "CRM
 export const ALL_ACTIONS: ActionOption[] = [
     { id: "wait",       label: "Wait",          desc: "Wait for a period of time, a specific date, or for conditions", tabs: ["Workflow", "Suggested"], Icon: Clock,     bg: "#0f2544", iconColor: "#fff" },
     { id: "ifelse",     label: "If/Else",        desc: "Split the automation based on conditions",                     tabs: ["Workflow", "Suggested"], Icon: GitBranch, bg: "#374151", iconColor: "#fff" },
+    { id: "match",      label: "Match",          desc: "Split contacts across any number of matching branches",        tabs: ["Workflow", "Suggested"], Icon: Split,     bg: "#4f46e5", iconColor: "#fff" },
     { id: "send_email", label: "Send an email",  desc: "A marketing email for subscribed contacts",                    tabs: ["Sending", "Suggested"],  Icon: Mail,      bg: "#1d4ed8", iconColor: "#fff" },
     { id: "webhook",    label: "Webhook",        desc: "Post contact data to a URL of your choice",                   tabs: ["Apps"],                 Icon: Link2,     bg: "#0e7490", iconColor: "#fff" },
     { id: "add_tag",    label: "Add a tag",      desc: "Add a tag to the contact",                                    tabs: ["Contacts"],             Icon: Tag,       bg: "#6d28d9", iconColor: "#fff" },

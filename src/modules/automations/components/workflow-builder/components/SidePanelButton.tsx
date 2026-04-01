@@ -1,18 +1,8 @@
-import { useState } from "react";
-
 export function SidePanelButton({ label, onClick }: { label: string; onClick?: () => void }) {
-    const [hov, setHov] = useState(false);
     return (
         <button
             onClick={onClick}
-            style={{
-                background: "transparent", border: `2px dashed ${hov ? "#3b82f6" : "#94a3b8"}`,
-                borderRadius: 8, padding: "12px 20px", cursor: "pointer",
-                color: hov ? "#3b82f6" : "#64748b", fontSize: 13, fontWeight: 500,
-                transition: "all 0.15s", whiteSpace: "nowrap",
-            }}
-            onMouseEnter={() => setHov(true)}
-            onMouseLeave={() => setHov(false)}
+            className="bg-transparent border-2 border-dashed border-slate-400 hover:border-blue-500 rounded-lg px-5 py-3 cursor-pointer text-slate-500 hover:text-blue-500 text-sm font-medium transition-all whitespace-nowrap"
         >
             {label}
         </button>
