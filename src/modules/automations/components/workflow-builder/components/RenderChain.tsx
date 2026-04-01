@@ -1,6 +1,7 @@
 import { WorkflowNode } from "@/types/automation";
 import { Line } from "./Line.tsx";
 import { BranchCurve } from "./BranchCurve.tsx";
+import { MergeConnector } from "./MergeConnector.tsx";
 import { AddBtn } from "./AddBtn.tsx";
 import { EndNode } from "./EndNode.tsx";
 import { BranchBadge } from "./BranchBadge.tsx";
@@ -33,6 +34,10 @@ const MATCH_BRANCH_BASE_WIDTH = 240;
 const MATCH_BRANCH_GAP = 32;
 const CURVE_HEIGHT = 56;
 const CURVE_COLOR = "#9ca3af";
+
+// Width of a trigger card — must match what TriggerCard actually renders
+const TRIGGER_CARD_WIDTH = 280;
+const TRIGGER_GAP = 24;
 
 function estimateSubtreeWidth(node: WorkflowNode | null | undefined): number {
     if (!node || node.type === "end") return CARD_MIN_WIDTH;
@@ -74,15 +79,20 @@ export function RenderChain({
     if (node.type === "workflow") {
         const triggers = node.triggers || [];
         const hasTriggers = triggers.length > 0;
-        const BW = 280;
-        const GAP = 24;
-        const totalWidth = triggers.length * BW + (triggers.length - 1) * GAP;
 
-        // For multi-trigger we just keep the original straight div connectors —
-        // triggers converge into one flow, not fan out, so curves aren't needed.
+        const totalWidth =
+            triggers.length * TRIGGER_CARD_WIDTH +
+            (triggers.length - 1) * TRIGGER_GAP;
+
+        // bottom-center of each trigger card (absolute x from left of wrapper)
+        const triggerCenters = triggers.map(
+            (_, i) => i * (TRIGGER_CARD_WIDTH + TRIGGER_GAP) + TRIGGER_CARD_WIDTH / 2
+        );
+
         return (
             <>
-                <div className="flex items-end" style={{ gap: GAP }}>
+                {/* Trigger row */}
+                <div className="flex items-end" style={{ gap: TRIGGER_GAP }}>
                     {hasTriggers ? (
                         triggers.map((t) => (
                             <TriggerCard
@@ -97,25 +107,14 @@ export function RenderChain({
                     )}
                 </div>
 
+                {/* Merge connector — curves from each trigger down to single point */}
                 {hasTriggers && (
-                    <div className="relative flex flex-col items-center" style={{ width: totalWidth }}>
-                        {triggers.length > 1 ? (
-                            <>
-                                <div className="flex w-full justify-between" style={{ padding: `0 ${BW / 2}px` }}>
-                                    {triggers.map((t) => (
-                                        <div key={t.id} className="w-px bg-gray-300 h-5" />
-                                    ))}
-                                </div>
-                                <div
-                                    className="absolute h-px bg-gray-300"
-                                    style={{ top: 20, left: BW / 2, right: BW / 2 }}
-                                />
-                                <div className="w-px bg-gray-300 h-5" />
-                            </>
-                        ) : (
-                            <Line />
-                        )}
-                    </div>
+                    <MergeConnector
+                        totalWidth={triggers.length === 1 ? TRIGGER_CARD_WIDTH : totalWidth}
+                        centers={triggerCenters}
+                        height={triggers.length === 1 ? 20 : CURVE_HEIGHT}
+                        color={CURVE_COLOR}
+                    />
                 )}
                 {!hasTriggers && <Line />}
 
@@ -174,27 +173,16 @@ export function RenderChain({
 
     // ── if/else ───────────────────────────────────────────────────────────────
     if (node.type === "ifelse") {
-        const BW = IFELSE_BRANCH_WIDTH;   // 260
-        const GAP = IFELSE_BRANCH_GAP;    // 100
-        const totalWidth = BW * 2 + GAP; // 620
+        const BW = IFELSE_BRANCH_WIDTH;
+        const GAP = IFELSE_BRANCH_GAP;
+        const totalWidth = BW * 2 + GAP;
 
-        // The parent card (IfElseCard) is ~300px wide, centred inside totalWidth.
-        // Its visual centre (relative to the branch row) = totalWidth / 2 = 310.
-        const parentCX = totalWidth / 2; // 310
+        const parentCX = totalWidth / 2;
+        const yesCX = BW / 2;
+        const noCX = BW + GAP + BW / 2;
 
-        // Absolute left edge of each branch column:
-        const yesLeft = 0;
-        const noLeft = BW + GAP; // 360
-
-        // Each branch column centre (absolute):
-        const yesCX = yesLeft + BW / 2;  // 130
-        const noCX = noLeft + BW / 2;    // 490
-
-        // parentCenterOffset for each branch column =
-        //   parentCX - (column left edge + column centre)
-        //   = parentCX - columnCX
-        const yesOffset = parentCX - yesCX;  // +180  → parent is to the right
-        const noOffset = parentCX - noCX;    // -180  → parent is to the left
+        const yesOffset = parentCX - yesCX;
+        const noOffset = parentCX - noCX;
 
         return (
             <>
@@ -204,7 +192,6 @@ export function RenderChain({
                     onClick={() => onEdit(node)}
                 />
 
-                {/* Two branch columns, each draws its own arrival curve */}
                 <div className="flex items-start" style={{ gap: GAP }}>
                     {/* YES */}
                     <div className="flex flex-col items-center" style={{ width: BW }}>
@@ -262,7 +249,6 @@ export function RenderChain({
             ? branchWidths.reduce((s, w) => s + w, 0) + (branches.length - 1) * branchGap
             : MATCH_BRANCH_BASE_WIDTH;
 
-        // Absolute left edge of each branch column
         const columnLeftEdges: number[] = [];
         if (hasBranches) {
             let cursor = 0;

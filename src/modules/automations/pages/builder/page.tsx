@@ -8,7 +8,19 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { useHeaderSlot } from '@/layout/components/header-slot-context';
 import { Content } from '@/layout/components/content';
 import { WorkflowNode, TriggerOption, ActionOption, NodeConfig, NodeType } from "@/types/automation";
-import { createInitial, mapNode, insertAfterNode, insertBranchStart, insertMatchBranchStart, reorderMatchBranches, deleteNode, moveNode, uid, DropTarget } from "@/utils/automation";
+import {
+    createInitial,
+    mapNode,
+    insertAfterNode,
+    insertBranchStart,
+    insertMatchBranchStart,
+    reorderMatchBranches,
+    deleteNode,
+    moveNode,
+    uid,
+    DropTarget,
+    syncMatchBranches,
+} from "@/utils/automation";
 import { TRIGGERS } from "@/constants/automation";
 import { WORKFLOW_RECIPES } from "@/mocks/automation";
 import { SidePanelButton } from "../../components/workflow-builder/components/SidePanelButton.tsx";
@@ -263,6 +275,32 @@ export default function WorkflowBuilderPage() {
         const nodeToEdit = modal.node;
         if (nodeToEdit) {
             const nodeId = nodeToEdit.id;
+            if (modal.type === "configure_match") {
+                setFlow((f) =>
+                    mapNode(f, nodeId, (n) => {
+                        if (n.type !== "match") {
+                            return { ...n, config: { ...n.config, ...config } };
+                        }
+
+                        const labels = Array.isArray(config.cases)
+                            ? config.cases
+                                .map((currentCase) => currentCase.trim())
+                                .filter((currentCase) => currentCase.length > 0)
+                            : [];
+
+                        const normalisedLabels = labels.length > 0 ? labels : ["Match 1", "Match 2", "Match 3"];
+
+                        return {
+                            ...n,
+                            config: { ...n.config, ...config, cases: normalisedLabels },
+                            matchBranches: syncMatchBranches(n.matchBranches, normalisedLabels),
+                        };
+                    }) as WorkflowNode
+                );
+                closeModal();
+                return;
+            }
+
             setFlow((f) => mapNode(f, nodeId, (n) => ({ ...n, config: { ...n.config, ...config } })) as WorkflowNode);
             closeModal();
             return;

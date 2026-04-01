@@ -35,6 +35,72 @@ const createMatchBranches = (labels: string[]): MatchBranch[] =>
         next: makeEnd(),
     }));
 
+const hasMeaningfulNode = (node: WorkflowNode | null | undefined): node is WorkflowNode =>
+    Boolean(node && node.type !== "end");
+
+const collapseDeletedNode = (node: WorkflowNode): WorkflowNode => {
+    if (node.type === "ifelse") {
+        const yes = node.yes;
+        const no = node.no;
+        const hasYes = hasMeaningfulNode(yes);
+        const hasNo = hasMeaningfulNode(no);
+
+        if (hasYes && hasNo) {
+            return node;
+        }
+        if (hasYes && yes) {
+            return yes;
+        }
+        if (hasNo && no) {
+            return no;
+        }
+        return makeEnd();
+    }
+
+    if (node.type === "match") {
+        const nonEmptyBranches = (node.matchBranches || [])
+            .map((branch) => branch.next)
+            .filter(hasMeaningfulNode);
+
+        if (nonEmptyBranches.length > 1) {
+            return node;
+        }
+        if (nonEmptyBranches.length === 1) {
+            return nonEmptyBranches[0];
+        }
+        return makeEnd();
+    }
+
+    return node.next || makeEnd();
+};
+
+const isDescendant = (ancestor: WorkflowNode | null | undefined, targetId: string): boolean => {
+    if (!ancestor) {
+        return false;
+    }
+    if (ancestor.id === targetId) {
+        return true;
+    }
+
+    if (ancestor.next && isDescendant(ancestor.next, targetId)) {
+        return true;
+    }
+    if (ancestor.yes && isDescendant(ancestor.yes, targetId)) {
+        return true;
+    }
+    if (ancestor.no && isDescendant(ancestor.no, targetId)) {
+        return true;
+    }
+    if (ancestor.triggers?.some((trigger) => isDescendant(trigger, targetId))) {
+        return true;
+    }
+    if (ancestor.matchBranches?.some((branch) => isDescendant(branch.next, targetId))) {
+        return true;
+    }
+
+    return false;
+};
+
 const buildInsertedNode = (
     type: NodeType,
     config: NodeConfig,
@@ -162,17 +228,40 @@ export const deleteNode = (root: WorkflowNode | null | undefined, targetId: stri
         const filtered = triggers.filter((t) => t.id !== targetId);
         if (filtered.length !== triggers.length) return { ...root, triggers: filtered };
     }
-    if (root.next?.id === targetId) return { ...root, next: root.next.type === "ifelse" ? makeEnd() : (root.next.next || makeEnd()) };
-    if (root.yes?.id === targetId) return { ...root, yes: root.yes.next || makeEnd() };
-    if (root.no?.id === targetId) return { ...root, no: root.no.next || makeEnd() };
+    if (root.next?.id === targetId) {
+        const collapsed = collapseDeletedNode(root.next);
+        if (collapsed === root.next) {
+            return root;
+        }
+        return { ...root, next: collapsed };
+    }
+    if (root.yes?.id === targetId) {
+        const collapsed = collapseDeletedNode(root.yes);
+        if (collapsed === root.yes) {
+            return root;
+        }
+        return { ...root, yes: collapsed };
+    }
+    if (root.no?.id === targetId) {
+        const collapsed = collapseDeletedNode(root.no);
+        if (collapsed === root.no) {
+            return root;
+        }
+        return { ...root, no: collapsed };
+    }
     if (root.matchBranches) {
         const directBranchMatch = root.matchBranches.find((branch) => branch.next?.id === targetId);
         if (directBranchMatch) {
+            const nextNode = directBranchMatch.next;
+            const collapsed = nextNode ? collapseDeletedNode(nextNode) : makeEnd();
+            if (collapsed === nextNode) {
+                return root;
+            }
             return {
                 ...root,
                 matchBranches: root.matchBranches.map((branch) =>
                     branch.id === directBranchMatch.id
-                        ? { ...branch, next: branch.next?.next || makeEnd() }
+                        ? { ...branch, next: collapsed }
                         : branch
                 ),
             };
@@ -227,7 +316,10 @@ export const moveNode = (root: WorkflowNode, nodeId: string, target: DropTarget)
 
     // 2. Prevent dropping onto itself or its children
     if (target.afterId === nodeId || target.ifelseId === nodeId || target.matchId === nodeId) return root;
-    // (A more thorough check would be isDescendant(nodeToMove, target))
+    const targetNodeId = target.afterId || target.ifelseId || target.matchId;
+    if (targetNodeId && isDescendant(nodeToMove, targetNodeId)) {
+        return root;
+    }
 
     // 3. Remove from old position
     const cleaned = deleteNode(root, nodeId) as WorkflowNode;
