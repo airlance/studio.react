@@ -88,6 +88,18 @@ const isMatchBranchDragData = (value: unknown): value is MatchBranchDragData => 
     return data.dragType === "match-branch" && typeof data.branchId === "string" && typeof data.matchId === "string";
 };
 
+// Returns true when the graph has at least one non-end, non-workflow node
+const graphHasActions = (node: WorkflowNode | null | undefined): boolean => {
+    if (!node) return false;
+    if (node.type === "end") return false;
+    if (node.type === "workflow") {
+        if (graphHasActions(node.next)) return true;
+        return (node.triggers ?? []).some((t) => graphHasActions(t));
+    }
+    if (node.type === "trigger") return graphHasActions(node.next);
+    return true;
+};
+
 export default function WorkflowBuilderPage() {
     useParams<{ id: string }>();
     const navigate = useNavigate();
@@ -292,26 +304,37 @@ export default function WorkflowBuilderPage() {
         }
     };
 
-    const hasRealTrigger = flow.type === "workflow" && (flow.triggers?.length || 0) > 0;
+    const hasTrigger = flow.type === "workflow" && (flow.triggers?.length ?? 0) > 0;
+    const hasRealTrigger = hasTrigger;
+
+    const validateFlow = useCallback((): string | null => {
+        if (flow.type === "workflow" && (flow.triggers?.length ?? 0) === 0) {
+            return "Add at least one start trigger before saving.";
+        }
+        if (!graphHasActions(flow)) {
+            return "Add at least one action to the workflow before saving.";
+        }
+        return null;
+    }, [flow]);
 
     const handleSave = useCallback(async () => {
+        const validationError = validateFlow();
+        if (validationError) {
+            toast({ description: validationError, variant: "destructive" });
+            return;
+        }
+
         setIsSaving(true);
         try {
-            /*
-             * TODO: call exportToHtml(template) here, POST the HTML + JSON
-             * to the API, then navigate back.
-             *
-             * For now we just simulate and navigate.
-             */
             await new Promise((r) => setTimeout(r, 600));
             toast({ description: 'Template saved.' });
-            setModal({ type: "show_json" })
+            setModal({ type: "show_json" });
         } catch {
             toast({ description: 'Failed to save template.', variant: 'destructive' });
         } finally {
             setIsSaving(false);
         }
-    }, [toast]);
+    }, [toast, validateFlow]);
 
     useEffect(() => {
         setHeaderSlot(
@@ -343,7 +366,7 @@ export default function WorkflowBuilderPage() {
         );
 
         return () => setHeaderSlot(null);
-    }, [handleBack, handleSave, isSaving, setHeaderSlot])
+    }, [handleBack, handleSave, isSaving, setHeaderSlot]);
 
     return (
         <>

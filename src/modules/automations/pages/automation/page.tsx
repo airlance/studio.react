@@ -369,7 +369,7 @@ export default function AutomationsPage() {
                     <div>
                         <div className="flex items-center justify-between mb-4">
                             <div className="flex items-center gap-2">
-                                <Sparkles className="h-4 w-4 text-accent" />
+                                <Sparkles className="size-4 text-primary" />
                                 <h2 className="text-sm font-semibold text-foreground">Quick-start templates</h2>
                                 <span className="text-xs text-muted-foreground">— start from a ready graph</span>
                             </div>
