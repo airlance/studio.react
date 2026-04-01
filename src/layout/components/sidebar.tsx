@@ -1,9 +1,13 @@
 'use client';
 
 import { cn } from '@/lib/utils';
-import { SidebarContent } from './sidebar-content';
+import { useState } from 'react';
+import { SidebarDefault } from './sidebar-default';
+import { SidebarWorkspace } from './sidebar-workspace';
 
 export function Sidebar() {
+    const [isWorkspaceMode, setIsWorkspaceMode] = useState(false);
+
   return (
     <aside
       className={cn(
@@ -12,7 +16,11 @@ export function Sidebar() {
         'transition-[width] duration-200 ease-in-out',
       )}
     >
-      <SidebarContent />
+        {isWorkspaceMode ? (
+            <SidebarWorkspace onSwitchToDefault={() => setIsWorkspaceMode(false)} />
+        ) : (
+            <SidebarDefault onSwitchToWorkspace={() => setIsWorkspaceMode(true)} />
+        )}
     </aside>
   );
 }

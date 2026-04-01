@@ -1,8 +1,8 @@
 import {
     List, FileText, Eye, MousePointer, Video, Share2,
-    Tag, Clock, GitBranch, Mail, Link2, BellRing, Zap
+    Tag, Clock, GitBranch, Mail, Link2, BellRing
 } from "lucide-react";
-import { TriggerOption, ActionOption } from "./types.ts";
+import { TriggerOption, ActionOption } from "@/types/automation";
 
 export const TRIGGER_CATS = ["View All", "Behaviors & Actions", "E-Commerce", "Email & Messages", "Sales & CRM", "Web Properties"];
 
@@ -55,7 +55,6 @@ export const WAIT_UNITS = ["minute(s)", "hour(s)", "day(s)", "week(s)"];
 export const COND_FIELDS = ["Email Address", "First Name", "Last Name", "Phone", "City", "Country", "Tag", "Custom Field"];
 export const COND_OPS    = ["Is", "Is not", "Contains", "Does not contain", "Starts with", "Is empty", "Is not empty"];
 
-// ── Shared styles ─────────────────────────────────────────────────────────
 export const STYLES = {
     line: { width: 2, background: "#cbd5e1", flexShrink: 0, alignSelf: "center" as const },
     card: {

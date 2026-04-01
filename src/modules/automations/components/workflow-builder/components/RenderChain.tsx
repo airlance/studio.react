@@ -1,4 +1,4 @@
-import { WorkflowNode, ActionOption } from "../types.ts";
+import { WorkflowNode } from "@/types/automation";
 import { Line } from "./Line.tsx";
 import { AddBtn } from "./AddBtn.tsx";
 import { EndNode } from "./EndNode.tsx";
@@ -8,13 +8,14 @@ import { WaitCard } from "../nodes/WaitCard.tsx";
 import { IfElseCard } from "../nodes/IfElseCard.tsx";
 import { ActionCard } from "../nodes/ActionCard.tsx";
 import { PlaceholderCard } from "../nodes/PlaceholderCard.tsx";
-import { ALL_ACTIONS } from "../constants.ts";
+import { ALL_ACTIONS } from "@/constants/automation";
 import { Zap } from "lucide-react";
+import { DropTarget } from "@/utils/automation";
 
 interface RenderChainProps {
     node: WorkflowNode | null | undefined;
     onAddTrigger: () => void;
-    onAddAction: (ctx: any) => void;
+    onAddAction: (ctx: DropTarget) => void;
     onDelete: (id: string) => void;
     onEdit: (node: WorkflowNode) => void;
 }

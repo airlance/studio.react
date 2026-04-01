@@ -1,11 +1,13 @@
-import { useState } from "react";
-import { ModalBox, ModalHeader } from "../components/ModalShared.tsx";
-import { STYLES } from "../constants.ts";
-import { NodeConfig } from "../types.ts";
+import { ChangeEvent, useCallback, useState } from "react";
+import { ChevronLeft } from "lucide-react";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { NodeConfig } from "@/types/automation";
 
 interface ConfigureEmailModalProps {
     config?: NodeConfig;
-    onSave: (config: any) => void;
+    onSave: (config: NodeConfig) => void;
     onBack: () => void;
     onClose: () => void;
 }
@@ -13,36 +15,79 @@ interface ConfigureEmailModalProps {
 export function ConfigureEmailModal({ config, onSave, onBack, onClose }: ConfigureEmailModalProps) {
     const [name, setName] = useState(config?.name || "New Campaign");
     const [subject, setSubject] = useState(config?.subject || "");
+
+    const handleOpenChange = useCallback((open: boolean) => {
+        if (!open) {
+            onClose();
+        }
+    }, [onClose]);
+
+    const handleNameChange = useCallback((event: ChangeEvent<HTMLInputElement>) => {
+        setName(event.target.value);
+    }, []);
+
+    const handleSubjectChange = useCallback((event: ChangeEvent<HTMLInputElement>) => {
+        setSubject(event.target.value);
+    }, []);
+
+    const handleSave = useCallback(() => {
+        onSave({ name, subject });
+    }, [name, onSave, subject]);
+
     return (
-        <ModalBox style={{ width: 640 }}>
-            <ModalHeader title={config ? "Edit email" : "Send an email"} onBack={onBack} onClose={onClose} />
-            <div style={{ padding: "8px 24px 0", color: "#64748b", fontSize: 13, marginBottom: 16 }}>A marketing email for subscribed contacts</div>
-            <div style={{ padding: "0 24px 24px" }}>
-                {[
-                    { label: "Email name", el: <input value={name} onChange={(e) => setName(e.target.value)} style={{ flex: 1, padding: "10px 12px", border: "none", fontSize: 14 }} /> },
-                    { label: "Subject line", el: <input placeholder="Write your subject line" value={subject} onChange={(e) => setSubject(e.target.value)} style={{ flex: 1, padding: "10px 12px", border: "none", fontSize: 14 }} /> },
-                    { label: "From", el: <span style={{ flex: 1, fontSize: 14, color: "#374151", padding: "10px 0" }}>user@example.com</span> },
-                    { label: "Send", el: <div style={{ display: "flex", gap: 8, padding: "8px 0" }}><button style={{ ...STYLES.btn("#3b82f6"), borderRadius: 20 }}>Immediately</button><button style={{ ...STYLES.btn("#f1f5f9", "#374151"), borderRadius: 20 }}>Predictive Send</button></div> },
-                ].map(({ label, el }) => (
-                    <div key={label} style={{ display: "flex", alignItems: "center", borderBottom: "1px solid #f1f5f9", padding: "4px 0" }}>
-                        <div style={{ width: 120, fontSize: 14, color: "#374151", fontWeight: 500 }}>{label}</div>
-                        {el}
+        <Dialog open onOpenChange={handleOpenChange}>
+            <DialogContent className="sm:max-w-[640px] p-0 gap-0" showCloseButton={false}>
+                <DialogHeader className="border-b border-slate-100 px-6 py-5 mb-0">
+                    <div className="flex items-start gap-2">
+                        <Button variant="ghost" size="sm" className="h-8 px-2 text-blue-500 hover:text-blue-600" onClick={onBack}>
+                            <ChevronLeft className="size-4" />
+                            Back
+                        </Button>
+                        <div className="flex-1">
+                            <DialogTitle>{config ? "Edit email" : "Send an email"}</DialogTitle>
+                            <DialogDescription className="mt-2">A marketing email for subscribed contacts</DialogDescription>
+                        </div>
+                        <Button variant="ghost" size="sm" onClick={onClose}>Close</Button>
                     </div>
-                ))}
-                <div style={{ marginTop: 16, border: "1px solid #e2e8f0", borderRadius: 8, padding: 24, textAlign: "center", color: "#94a3b8", fontSize: 14 }}>
-                    <div style={{ fontSize: 24, fontWeight: 700, color: "#cbd5e1", marginBottom: 8 }}>LOGO</div>
-                    <div style={{ fontWeight: 600, color: "#374151", marginBottom: 8 }}>Design your email here!</div>
-                    <div style={{ fontSize: 13 }}>Click to open the email editor</div>
+                </DialogHeader>
+
+                <div className="px-6 pt-1 pb-6">
+                    <div className="flex items-center border-b border-slate-100 py-2">
+                        <div className="w-[120px] text-sm font-medium text-slate-700">Email name</div>
+                        <Input value={name} onChange={handleNameChange} className="border-0 shadow-none px-0 focus-visible:ring-0" />
+                    </div>
+                    <div className="flex items-center border-b border-slate-100 py-2">
+                        <div className="w-[120px] text-sm font-medium text-slate-700">Subject line</div>
+                        <Input placeholder="Write your subject line" value={subject} onChange={handleSubjectChange} className="border-0 shadow-none px-0 focus-visible:ring-0" />
+                    </div>
+                    <div className="flex items-center border-b border-slate-100 py-2">
+                        <div className="w-[120px] text-sm font-medium text-slate-700">From</div>
+                        <span className="text-sm text-slate-700">user@example.com</span>
+                    </div>
+                    <div className="flex items-center border-b border-slate-100 py-2">
+                        <div className="w-[120px] text-sm font-medium text-slate-700">Send</div>
+                        <div className="flex gap-2">
+                            <Button className="rounded-full">Immediately</Button>
+                            <Button variant="ghost" className="rounded-full bg-slate-100 text-slate-700 hover:bg-slate-200">Predictive Send</Button>
+                        </div>
+                    </div>
+
+                    <div className="mt-4 border border-slate-200 rounded-lg p-6 text-center text-sm text-slate-400">
+                        <div className="text-2xl font-bold text-slate-300 mb-2">LOGO</div>
+                        <div className="font-semibold text-slate-700 mb-2">Design your email here!</div>
+                        <div className="text-xs">Click to open the email editor</div>
+                    </div>
                 </div>
-            </div>
-            <div style={{ borderTop: "1px solid #f1f5f9", padding: "16px 24px", display: "flex", justifyContent: "space-between" }}>
-                <button style={{ ...STYLES.btn("#f1f5f9", "#374151") }}>Send a test</button>
-                <div style={{ display: "flex", gap: 10 }}>
-                    <button onClick={onClose} style={{ ...STYLES.btn("#f1f5f9", "#374151") }}>Cancel</button>
-                    <button style={{ ...STYLES.btn("#f1f5f9", "#94a3b8") }}>Save as draft</button>
-                    <button onClick={() => onSave({ name, subject })} style={{ ...STYLES.btn("#3b82f6") }}>{config ? "Save Changes" : "Finish"}</button>
+
+                <div className="border-t border-slate-100 px-6 py-4 flex justify-between">
+                    <Button variant="ghost" className="bg-slate-100 text-slate-700 hover:bg-slate-200">Send a test</Button>
+                    <div className="flex gap-2.5">
+                        <Button variant="ghost" className="bg-slate-100 text-slate-700 hover:bg-slate-200" onClick={onClose}>Cancel</Button>
+                        <Button variant="ghost" className="bg-slate-100 text-slate-400 hover:bg-slate-200">Save as draft</Button>
+                        <Button onClick={handleSave}>{config ? "Save Changes" : "Finish"}</Button>
+                    </div>
                 </div>
-            </div>
-        </ModalBox>
+            </DialogContent>
+        </Dialog>
     );
 }

@@ -1,5 +1,5 @@
-import { WorkflowNode } from "../types.ts";
-import { uid, makeEnd } from "../utils.ts";
+import { WorkflowNode } from "@/types/automation";
+import { uid, makeEnd } from "@/utils/automation";
 
 export const WORKFLOW_RECIPES: Record<string, WorkflowNode> = {
     "welcome": {

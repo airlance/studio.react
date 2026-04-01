@@ -1,13 +1,15 @@
 import { useState } from "react";
 import { Plus } from "lucide-react";
+import type { UniqueIdentifier } from "@dnd-kit/core";
 import { useDroppable, useDndContext } from "@dnd-kit/core";
-import { STYLES } from "../constants.ts";
+import { STYLES } from "@/constants/automation";
+import { DropTarget } from "@/utils/automation";
 
 interface AddBtnProps {
-    id: string;
+    id: UniqueIdentifier;
     onClick: () => void;
     active?: boolean;
-    data?: any;
+    data?: DropTarget;
 }
 
 export function AddBtn({ id, onClick, active, data }: AddBtnProps) {

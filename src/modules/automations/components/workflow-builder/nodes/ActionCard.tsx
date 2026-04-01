@@ -2,8 +2,8 @@ import { useState } from "react";
 import { Trash2, Zap, LucideIcon } from "lucide-react";
 import { useDraggable } from "@dnd-kit/core";
 import { CSS } from "@dnd-kit/utilities";
-import { WorkflowNode } from "../types.ts";
-import { STYLES } from "../constants.ts";
+import { WorkflowNode } from "@/types/automation";
+import { STYLES } from "@/constants/automation";
 
 interface ActionCardProps {
     node: WorkflowNode;

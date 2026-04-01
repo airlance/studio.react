@@ -222,17 +222,6 @@ where JSDOM provides incomplete types — add `// JSDOM mock` comment on that li
 
 ---
 
-## Adding a New Workflow Node Type
-
-1. Add the type string to `WorkflowNodeType` union in `src/types/workflow-builder.ts`.
-2. Define the node data interface in the same file.
-3. Add a case in `createDefaultNode` (if exists) or equivalent factory.
-4. Create a component in `src/modules/automations/components/workflow-builder/nodes/` (e.g., `EmailNode.tsx`).
-5. Register the node in `src/modules/automations/components/workflow-builder/constants.ts` (NODE_TYPES configuration).
-6. Create/Update a configuration modal in `src/modules/automations/components/workflow-builder/modals/`.
-
----
-
 ## Adding a New Block Type
 
 1. Add the type string to `BlockType` union in `src/types/email-builder.ts`

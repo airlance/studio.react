@@ -1,4 +1,4 @@
-import { WorkflowNode, NodeConfig, NodeType } from "./types.ts";
+import { WorkflowNode, NodeConfig, NodeType } from "@/types/automation";
 import { uid as generateUid } from "@/utils/uid.ts";
 
 export interface DropTarget {
@@ -47,7 +47,7 @@ export const deleteNode = (root: WorkflowNode | null | undefined, targetId: stri
     if (root.next?.id === targetId) return { ...root, next: root.next.type === "ifelse" ? makeEnd() : (root.next.next || makeEnd()) };
     if (root.yes?.id === targetId) return { ...root, yes: root.yes.next || makeEnd() };
     if (root.no?.id === targetId) return { ...root, no: root.no.next || makeEnd() };
-    
+
     return {
         ...root,
         triggers: root.triggers ? root.triggers.map((t) => deleteNode(t, targetId) as WorkflowNode).filter(Boolean) : undefined,

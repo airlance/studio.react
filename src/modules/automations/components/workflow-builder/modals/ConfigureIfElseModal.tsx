@@ -1,12 +1,14 @@
-import { useState } from "react";
-import { GitBranch, X, ChevronLeft, ChevronDown, ArrowRight } from "lucide-react";
-import { ModalBox } from "../components/ModalShared.tsx";
-import { STYLES, COND_FIELDS, COND_OPS } from "../constants.ts";
-import { NodeConfig } from "../types.ts";
+import { ChangeEvent, useCallback, useState } from "react";
+import { GitBranch, ChevronLeft, ArrowRight } from "lucide-react";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { COND_FIELDS, COND_OPS } from "@/constants/automation";
+import { NodeConfig } from "@/types/automation";
 
 interface ConfigureIfElseModalProps {
     config?: NodeConfig;
-    onSave: (config: any) => void;
+    onSave: (config: NodeConfig) => void;
     onBack: () => void;
     onClose: () => void;
 }
@@ -15,67 +17,89 @@ export function ConfigureIfElseModal({ config, onSave, onBack, onClose }: Config
     const [field, setField] = useState(config?.field || "Email Address");
     const [op, setOp] = useState(config?.op || "Is");
     const [value, setValue] = useState(config?.value || "");
+
+    const handleOpenChange = useCallback((open: boolean) => {
+        if (!open) {
+            onClose();
+        }
+    }, [onClose]);
+
+    const handleFieldChange = useCallback((event: ChangeEvent<HTMLSelectElement>) => {
+        setField(event.target.value);
+    }, []);
+
+    const handleOpChange = useCallback((event: ChangeEvent<HTMLSelectElement>) => {
+        setOp(event.target.value);
+    }, []);
+
+    const handleValueChange = useCallback((event: ChangeEvent<HTMLInputElement>) => {
+        setValue(event.target.value);
+    }, []);
+
+    const handleSave = useCallback(() => {
+        onSave({ field, op, value });
+    }, [field, onSave, op, value]);
+
     return (
-        <ModalBox style={{ width: 680 }}>
-            <div style={{ display: "flex", alignItems: "center", padding: "20px 24px", borderBottom: "1px solid #f1f5f9", gap: 12 }}>
-                {!config && (
-                    <button onClick={onBack} style={{ background: "none", border: "none", cursor: "pointer", color: "#3b82f6", display: "flex", alignItems: "center", gap: 4, fontSize: 14 }}>
-                        <ChevronLeft size={16} /> Back
-                    </button>
-                )}
-                <div style={{ flex: 1 }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                        <div style={{ width: 40, height: 40, borderRadius: "50%", background: "#374151", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                            <GitBranch size={18} color="#fff" />
+        <Dialog open onOpenChange={handleOpenChange}>
+            <DialogContent className="sm:max-w-[680px] p-0 gap-0" showCloseButton={false}>
+                <DialogHeader className="border-b border-slate-100 px-6 py-5 mb-0">
+                    <div className="flex items-start gap-3">
+                        {!config && (
+                            <Button variant="ghost" size="sm" className="h-8 px-2 text-blue-500 hover:text-blue-600" onClick={onBack}>
+                                <ChevronLeft className="size-4" />
+                                Back
+                            </Button>
+                        )}
+                        <div className="flex-1 flex items-center gap-2.5">
+                            <div className="size-10 rounded-full bg-slate-700 flex items-center justify-center">
+                                <GitBranch size={18} color="#fff" />
+                            </div>
+                            <div>
+                                <DialogTitle>{config ? "Edit conditions" : "Does contact match these conditions?"}</DialogTitle>
+                                <DialogDescription className="mt-1">Split the automation based on conditions</DialogDescription>
+                            </div>
                         </div>
-                        <div>
-                            <div style={{ fontSize: 18, fontWeight: 600, color: "#0f172a" }}>{config ? "Edit conditions" : "Does contact match these conditions?"}</div>
-                            <div style={{ fontSize: 13, color: "#64748b" }}>Split the automation based on conditions</div>
-                        </div>
+                        <Button variant="ghost" size="sm" onClick={onClose}>Close</Button>
                     </div>
-                </div>
-                <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", color: "#94a3b8" }}><X size={20} /></button>
-            </div>
-            <div style={{ padding: "24px" }}>
-                <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 12 }}>
-                    <button style={{ background: "none", border: "none", cursor: "pointer", color: "#ef4444", fontSize: 13 }}>Clear all conditions</button>
-                </div>
-                <div style={{ border: "1px solid #e2e8f0", borderRadius: 10, padding: 16, marginBottom: 16 }}>
-                    <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                        <div style={{ position: "relative", flex: 2 }}>
-                            <select value={field} onChange={(e) => setField(e.target.value)}
-                                    style={{ width: "100%", padding: "10px 12px", border: "1px solid #e2e8f0", borderRadius: 6, fontSize: 13, appearance: "none" }}>
-                                {COND_FIELDS.map((f) => <option key={f}>{f}</option>)}
+                </DialogHeader>
+
+                <div className="px-6 py-6">
+                    <div className="flex justify-end mb-3">
+                        <button className="text-sm text-red-500">Clear all conditions</button>
+                    </div>
+                    <div className="border border-slate-200 rounded-xl p-4 mb-4">
+                        <div className="flex gap-2 items-center">
+                            <select value={field} onChange={handleFieldChange} className="flex-[2] px-3 py-2.5 border border-slate-200 rounded-md text-sm">
+                                {COND_FIELDS.map((currentField) => <option key={currentField}>{currentField}</option>)}
                             </select>
-                            <ChevronDown size={14} style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", pointerEvents: "none", color: "#94a3b8" }} />
-                        </div>
-                        <div style={{ position: "relative", flex: 1 }}>
-                            <select value={op} onChange={(e) => setOp(e.target.value)}
-                                    style={{ width: "100%", padding: "10px 12px", border: "1px solid #e2e8f0", borderRadius: 6, fontSize: 13, appearance: "none" }}>
-                                {COND_OPS.map((o) => <option key={o}>{o}</option>)}
+                            <select value={op} onChange={handleOpChange} className="flex-1 px-3 py-2.5 border border-slate-200 rounded-md text-sm">
+                                {COND_OPS.map((currentOp) => <option key={currentOp}>{currentOp}</option>)}
                             </select>
-                            <ChevronDown size={14} style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", pointerEvents: "none", color: "#94a3b8" }} />
+                            <Input
+                                placeholder="Enter value..."
+                                value={value}
+                                onChange={handleValueChange}
+                                className="flex-[2] border-blue-500"
+                            />
                         </div>
-                        <input placeholder="Enter value..." value={value} onChange={(e) => setValue(e.target.value)}
-                               style={{ flex: 2, padding: "10px 12px", border: "1px solid #3b82f6", borderRadius: 6, fontSize: 13 }} />
+                        <button className="text-sm text-blue-500 mt-2">+ Add another condition</button>
                     </div>
-                    <button style={{ background: "none", border: "none", color: "#3b82f6", fontSize: 13, cursor: "pointer", marginTop: 8 }}>
-                        + Add another condition
-                    </button>
-                </div>
-                <button style={{ ...STYLES.btn("#f1f5f9", "#374151"), width: "auto", marginBottom: 20 }}>Add condition group</button>
-                <div style={{ borderTop: "1px solid #f1f5f9", paddingTop: 16 }}>
-                    <div style={{ fontSize: 14, fontWeight: 500, color: "#374151", marginBottom: 10 }}>Select a segment to use its conditions</div>
-                    <div style={{ border: "1px solid #e2e8f0", borderRadius: 8, padding: "12px 16px", display: "flex", alignItems: "center", gap: 8, color: "#374151", cursor: "pointer" }}>
-                        <ArrowRight size={16} color="#94a3b8" />
-                        <span style={{ fontSize: 14 }}>Saved Segments</span>
+                    <Button variant="ghost" className="bg-slate-100 text-slate-700 hover:bg-slate-200 mb-5">Add condition group</Button>
+                    <div className="border-t border-slate-100 pt-4">
+                        <p className="text-sm font-medium text-slate-700 mb-2.5">Select a segment to use its conditions</p>
+                        <div className="border border-slate-200 rounded-lg px-4 py-3 flex items-center gap-2 text-slate-700">
+                            <ArrowRight size={16} color="#94a3b8" />
+                            <span className="text-sm">Saved Segments</span>
+                        </div>
                     </div>
                 </div>
-            </div>
-            <div style={{ borderTop: "1px solid #f1f5f9", padding: "16px 24px", display: "flex", justifyContent: "flex-end", gap: 10 }}>
-                <button onClick={onClose} style={{ ...STYLES.btn("#f1f5f9", "#374151") }}>Cancel</button>
-                <button onClick={() => onSave({ field, op, value })} style={{ ...STYLES.btn("#3b82f6") }}>{config ? "Save Changes" : "Save"}</button>
-            </div>
-        </ModalBox>
+
+                <div className="border-t border-slate-100 px-6 py-4 flex justify-end gap-2.5">
+                    <Button variant="ghost" className="bg-slate-100 text-slate-700 hover:bg-slate-200" onClick={onClose}>Cancel</Button>
+                    <Button onClick={handleSave}>{config ? "Save Changes" : "Save"}</Button>
+                </div>
+            </DialogContent>
+        </Dialog>
     );
 }

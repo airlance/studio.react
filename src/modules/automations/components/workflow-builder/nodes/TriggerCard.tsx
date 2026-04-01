@@ -2,8 +2,8 @@ import { useState } from "react";
 import { Eye, Trash2 } from "lucide-react";
 import { useDraggable } from "@dnd-kit/core";
 import { CSS } from "@dnd-kit/utilities";
-import { WorkflowNode } from "../types.ts";
-import { TRIGGERS, TRIGGER_LABEL, STYLES } from "../constants.ts";
+import { WorkflowNode } from "@/types/automation";
+import { TRIGGERS, TRIGGER_LABEL, STYLES } from "@/constants/automation";
 
 export function TriggerCard({ node, onDelete, onClick }: { node: WorkflowNode; onDelete: () => void; onClick: () => void }) {
     const [hov, setHov] = useState(false);
