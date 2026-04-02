@@ -9,7 +9,7 @@ import {
   Plus,
   Settings,
   Sun,
-    Globe,
+  Globe,
   User,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -83,6 +83,7 @@ export function SidebarDefaultHeader({ onSwitchToWorkspace }: SidebarDefaultHead
   const { theme, setTheme } = useTheme();
     const navigate = useNavigate();
     const handleSettings   = useCallback(() => navigate('/settings/'), [navigate]);
+    const handleSignOut = useCallback(() => navigate('/auth/logout'), [navigate]);
     const { t, language, setLanguage } = useTranslation();
     const currentLang = LANGUAGE_OPTIONS.find(l => l.code === language);
 
@@ -171,7 +172,7 @@ export function SidebarDefaultHeader({ onSwitchToWorkspace }: SidebarDefaultHead
                 <Crown className="size-4" />
                 <span>{t('layout.sidebar.upgrade')}</span>
               </DropdownMenuItem>
-              <DropdownMenuItem>
+              <DropdownMenuItem onSelect={handleSignOut}>
                 <LogOut className="size-4" />
                 <span>{t('layout.sidebar.signOut')}</span>
               </DropdownMenuItem>

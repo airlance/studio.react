@@ -40,7 +40,7 @@ export function Header() {
                     <div className="flex items-center gap-4">
                         <div className="flex items-center -ms-1">
                             <img
-                                src={toAbsoluteUrl('/media/app/mini-logo.svg')}
+                                src={toAbsoluteUrl('/media/app/logo.png')}
                                 alt=""
                                 className="h-4"
                             />

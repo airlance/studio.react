@@ -1,6 +1,8 @@
 import { lazy, Suspense } from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { ScreenLoader } from '@/components/screen-loader';
+import { RequireAuth } from '@/modules/auth/components/require-auth';
+import { RequireAdmin } from '@/modules/auth/components/require-admin';
 
 const DashboardModule = lazy(() => import('@/modules/dashboard'));
 const FormModule = lazy(() => import('@/modules/forms'));
@@ -15,114 +17,82 @@ const EventsModule = lazy(() => import('@/modules/events'));
 const SettingsModule = lazy(() => import('@/modules/settings'));
 const StoreModule = lazy(() => import('@/modules/store'));
 const ErrorModule = lazy(() => import('@/modules/errors'));
+const AuthModule = lazy(() => import('@/modules/auth'));
 
 export function ModulesProvider() {
+    const withAuth = (element: JSX.Element) => (
+        <RequireAuth>
+            <Suspense fallback={<ScreenLoader />}>{element}</Suspense>
+        </RequireAuth>
+    );
+    const withAdmin = (element: JSX.Element) => (
+        <RequireAdmin>
+            <Suspense fallback={<ScreenLoader />}>{element}</Suspense>
+        </RequireAdmin>
+    );
+
     return (
         <Routes>
             <Route path="/" element={<Navigate to="/dashboard" replace />} />
             <Route
                 path="/dashboard/*"
-                element={
-                    <Suspense fallback={<ScreenLoader />}>
-                        <DashboardModule />
-                    </Suspense>
-                }
+                element={withAuth(<DashboardModule />)}
             />
             <Route
                 path="/forms/*"
-                element={
-                    <Suspense fallback={<ScreenLoader />}>
-                        <FormModule />
-                    </Suspense>
-                }
+                element={withAuth(<FormModule />)}
             />
             <Route
                 path="/tags/*"
-                element={
-                    <Suspense fallback={<ScreenLoader />}>
-                        <TagsModule />
-                    </Suspense>
-                }
+                element={withAuth(<TagsModule />)}
             />
             <Route
                 path="/fields/*"
-                element={
-                    <Suspense fallback={<ScreenLoader />}>
-                        <FieldsModule />
-                    </Suspense>
-                }
+                element={withAuth(<FieldsModule />)}
             />
             <Route
                 path="/lists/*"
-                element={
-                    <Suspense fallback={<ScreenLoader />}>
-                        <ListsModule />
-                    </Suspense>
-                }
+                element={withAuth(<ListsModule />)}
             />
             <Route
                 path="/tracking/*"
-                element={
-                    <Suspense fallback={<ScreenLoader />}>
-                        <TrackingModule />
-                    </Suspense>
-                }
+                element={withAuth(<TrackingModule />)}
             />
             <Route
                 path="/storage/*"
-                element={
-                    <Suspense fallback={<ScreenLoader />}>
-                        <StorageModule />
-                    </Suspense>
-                }
+                element={withAuth(<StorageModule />)}
             />
             <Route
                 path="/automations/*"
-                element={
-                    <Suspense fallback={<ScreenLoader />}>
-                        <AutomationModule />
-                    </Suspense>
-                }
+                element={withAuth(<AutomationModule />)}
             />
             <Route
                 path="/campaigns/*"
-                element={
-                    <Suspense fallback={<ScreenLoader />}>
-                        <CampaignModule />
-                    </Suspense>
-                }
+                element={withAuth(<CampaignModule />)}
             />
             <Route
                 path="/events/*"
-                element={
-                    <Suspense fallback={<ScreenLoader />}>
-                        <EventsModule />
-                    </Suspense>
-                }
+                element={withAuth(<EventsModule />)}
             />
             <Route
                 path="/settings/*"
-                element={
-                    <Suspense fallback={<ScreenLoader />}>
-                        <SettingsModule />
-                    </Suspense>
-                }
+                element={withAdmin(<SettingsModule />)}
             />
             <Route
                 path="/store/*"
+                element={withAuth(<StoreModule />)}
+            />
+            <Route
+                path="/auth/*"
                 element={
                     <Suspense fallback={<ScreenLoader />}>
-                        <StoreModule />
+                        <AuthModule />
                     </Suspense>
                 }
             />
             <Route
                 path="*"
-                element={
-                    <Suspense fallback={<ScreenLoader />}>
-                        <ErrorModule />
-                    </Suspense>
-                }
+                element={withAuth(<ErrorModule />)}
             />
         </Routes>
     );
