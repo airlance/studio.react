@@ -109,4 +109,18 @@ export interface TranslationDictionary {
     'campaigns.templates.listDescription': string;
     'campaigns.templates.useTemplate': string;
     'campaigns.templates.notFound': string;
+    'onboarding.profile.title': string;
+    'onboarding.profile.description': string;
+    'onboarding.profile.firstName': string;
+    'onboarding.profile.lastName': string;
+    'onboarding.profile.avatar': string;
+    'onboarding.profile.save': string;
+    'onboarding.workspace.title': string;
+    'onboarding.workspace.description': string;
+    'onboarding.workspace.name': string;
+    'onboarding.workspace.slug': string;
+    'onboarding.workspace.create': string;
+    'onboarding.workspace.invitationTitle': string;
+    'onboarding.workspace.invitationDescription': string;
+    'onboarding.workspace.accept': string;
 }

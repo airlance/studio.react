@@ -17,6 +17,7 @@ const SettingsModule = lazy(() => import('@/modules/settings'));
 const StoreModule = lazy(() => import('@/modules/store'));
 const ErrorModule = lazy(() => import('@/modules/errors'));
 const AuthModule = lazy(() => import('@/modules/auth'));
+const OnboardingModule = lazy(() => import('@/modules/onboarding'));
 
 export function ModulesProvider() {
     return (
@@ -27,6 +28,16 @@ export function ModulesProvider() {
                 element={
                     <Suspense fallback={<ScreenLoader />}>
                         <AuthModule />
+                    </Suspense>
+                }
+            />
+            <Route
+                path="/onboarding/*"
+                element={
+                    <Suspense fallback={<ScreenLoader />}>
+                        <ProtectedRoute>
+                            <OnboardingModule />
+                        </ProtectedRoute>
                     </Suspense>
                 }
             />
