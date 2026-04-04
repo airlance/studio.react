@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { VerificationFlow } from '@ory/client';
+import { VerificationFlow, UpdateVerificationFlowBody } from '@ory/client';
 import { kratos } from '@/lib/kratos';
 import { KratosForm } from '../components/kratos-form';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -34,12 +34,14 @@ const VerificationPage = () => {
     }, [flow, code]);
 
     const handleSubmit = (codeValue?: string) => {
-        const body = codeValue ? { method: 'code', code: codeValue } : {};
+        const body: UpdateVerificationFlowBody = codeValue 
+            ? { method: 'code', code: codeValue } 
+            : { method: 'code' }; // Fallback if called without code, though UI usually provides it
         
         kratos
             .updateVerificationFlow({
                 flow: flow?.id || '',
-                updateVerificationFlowBody: body as any,
+                updateVerificationFlowBody: body,
             })
             .then(() => {
                 // Verification success!

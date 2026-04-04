@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { RecoveryFlow } from '@ory/client';
+import { RecoveryFlow, UpdateRecoveryFlowBody } from '@ory/client';
 import { kratos } from '@/lib/kratos';
 import { KratosForm } from '../components/kratos-form';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -28,7 +28,7 @@ const RecoveryPage = () => {
                 updateRecoveryFlowBody: {
                     method: 'code',
                     ...body,
-                } as any,
+                } as UpdateRecoveryFlowBody,
             })
             .then(({ data }) => setFlow(data))
             .catch((err) => {

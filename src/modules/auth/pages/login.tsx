@@ -5,9 +5,10 @@ import { KratosForm } from '../components/kratos-form';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Link, useSearchParams, useNavigate } from 'react-router-dom';
-import { useAuth } from '@/providers/auth-provider';
+import { useAuth } from '@/hooks/use-auth';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { CheckCircle2, MailWarning } from 'lucide-react';
+import { UpdateLoginFlowBody } from '@ory/client';
 
 const LoginPage = () => {
     const [flow, setFlow] = useState<LoginFlow | null>(null);
@@ -56,7 +57,7 @@ const LoginPage = () => {
                 updateLoginFlowBody: {
                     method: 'password',
                     ...body,
-                } as any,
+                } as UpdateLoginFlowBody,
             })
             .then(() => {
                 const redirectUrl = returnTo || '/dashboard';

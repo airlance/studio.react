@@ -36,7 +36,7 @@ import { Language } from '@/config/i18n/types';
 import { useTranslation } from '@/hooks/useTranslation';
 import { toAbsoluteUrl } from '@/lib/helpers';
 import { Badge } from '@/components/ui/badge';
-import { useAuth } from '@/providers/auth-provider';
+import { useAuth } from '@/hooks/use-auth';
 
 interface Workspace {
   id: string;

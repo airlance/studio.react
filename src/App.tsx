@@ -5,8 +5,8 @@ import { LoadingBarContainer } from 'react-top-loading-bar';
 import { Toaster } from '@/components/ui/sonner';
 import { HelmetProvider } from '@packages/react-helmet-async';
 import { TranslationProvider } from '@/config/i18n/context';
+import { AuthProvider } from '@/providers/auth/auth-provider';
 import { ModulesProvider } from './providers/modules-provider';
-import { AuthProvider } from './providers/auth-provider';
 
 const queryClient = new QueryClient();
 const { BASE_URL } = import.meta.env;

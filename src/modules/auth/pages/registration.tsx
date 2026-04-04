@@ -5,7 +5,8 @@ import { KratosForm } from '../components/kratos-form';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Link, useSearchParams, useNavigate } from 'react-router-dom';
-import { useAuth } from '@/providers/auth-provider';
+import { useAuth } from '@/hooks/use-auth';
+import { UpdateRegistrationFlowBody } from '@ory/client';
 
 const RegistrationPage = () => {
     const [flow, setFlow] = useState<RegistrationFlow | null>(null);
@@ -39,7 +40,7 @@ const RegistrationPage = () => {
                 updateRegistrationFlowBody: {
                     method: 'password',
                     ...body,
-                } as any,
+                } as UpdateRegistrationFlowBody,
             })
             .then(() => {
                 // If we get here, it means registration was successful
