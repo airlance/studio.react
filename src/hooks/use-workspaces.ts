@@ -12,6 +12,14 @@ export interface Workspace {
     updated_at: string;
 }
 
+export interface WorkspaceConfig {
+    user_id: string;
+    workspace_id: string;
+    language: string;
+    theme: string;
+    is_current: boolean;
+}
+
 export const useWorkspaces = () => {
     const queryClient = useQueryClient();
 
@@ -31,13 +39,22 @@ export const useWorkspaces = () => {
         },
     });
 
+    const workspaceConfigQuery = useQuery({
+        queryKey: ['workspaces', 'config'],
+        queryFn: async () => {
+            const { data } = await api.get<WorkspaceConfig>('/workspaces/config');
+            return data;
+        },
+    });
+
     const switchWorkspaceMutation = useMutation({
         mutationFn: async (id: string) => {
             await api.post(`/workspaces/current/${id}`);
         },
         onSuccess: () => {
-             // Invalidate current workspace to refetch
+             // Invalidate current workspace and config to refetch
             queryClient.invalidateQueries({ queryKey: ['workspaces', 'current'] });
+            queryClient.invalidateQueries({ queryKey: ['workspaces', 'config'] });
         },
     });
 
@@ -68,14 +85,25 @@ export const useWorkspaces = () => {
         },
     });
 
+    const updateConfigMutation = useMutation({
+        mutationFn: async ({ id, language, theme }: { id: string; language?: string; theme?: string }) => {
+            await api.patch(`/workspaces/config/${id}`, { language, theme });
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['workspaces', 'config'] });
+        },
+    });
+
     return {
         workspaces: workspacesQuery.data || [],
         currentWorkspace: currentWorkspaceQuery.data,
-        isLoading: workspacesQuery.isLoading || currentWorkspaceQuery.isLoading,
-        isError: workspacesQuery.isError || currentWorkspaceQuery.isError,
+        config: workspaceConfigQuery.data,
+        isLoading: workspacesQuery.isLoading || currentWorkspaceQuery.isLoading || workspaceConfigQuery.isLoading,
+        isError: workspacesQuery.isError || currentWorkspaceQuery.isError || workspaceConfigQuery.isError,
         switchWorkspace: switchWorkspaceMutation.mutate,
         isSwitching: switchWorkspaceMutation.isPending,
         createWorkspace: createWorkspaceMutation,
         updateWorkspace: updateWorkspaceMutation,
+        updateConfig: updateConfigMutation.mutate,
     };
 };

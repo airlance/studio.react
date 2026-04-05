@@ -16,6 +16,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTheme } from 'next-themes';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -24,14 +25,14 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-    DropdownMenuSub,
-    DropdownMenuSubContent,
-    DropdownMenuSubTrigger,
-    DropdownMenuRadioGroup,
-    DropdownMenuRadioItem,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
 } from '@/components/ui/dropdown-menu';
 import { useLayout } from './layout-context';
-import { useCallback } from 'react';
+import { useCallback, useEffect } from 'react';
 import { Language } from '@/config/i18n/types';
 import { useTranslation } from '@/hooks/useTranslation';
 import { toAbsoluteUrl } from '@/lib/helpers';
@@ -46,30 +47,50 @@ const getWorkspaceColor = (id: string) => {
 };
 
 interface SidebarDefaultHeaderProps {
-    onSwitchToWorkspace?: () => void;
+  onSwitchToWorkspace?: () => void;
 }
 
 const LANGUAGE_OPTIONS: { code: Language; flag: string; label: string }[] = [
-    { code: 'en', flag: toAbsoluteUrl('/media/flags/united-states.svg'), label: 'English' },
-    { code: 'ru', flag: toAbsoluteUrl('/media/flags/russia.svg'), label: 'Русский' },
-    { code: 'uk', flag: toAbsoluteUrl('/media/flags/ukraine.svg'), label: 'Українська' },
-    { code: 'it', flag: toAbsoluteUrl('/media/flags/italy.svg'), label: 'Italiano' },
-    { code: 'es', flag: toAbsoluteUrl('/media/flags/spain.svg'), label: 'Español' },
-    { code: 'fr', flag: toAbsoluteUrl('/media/flags/france.svg'), label: 'Français' },
+  { code: 'en', flag: toAbsoluteUrl('/media/flags/united-states.svg'), label: 'English' },
+  { code: 'ru', flag: toAbsoluteUrl('/media/flags/russia.svg'), label: 'Русский' },
+  { code: 'uk', flag: toAbsoluteUrl('/media/flags/ukraine.svg'), label: 'Українська' },
+  { code: 'it', flag: toAbsoluteUrl('/media/flags/italy.svg'), label: 'Italiano' },
+  { code: 'es', flag: toAbsoluteUrl('/media/flags/spain.svg'), label: 'Español' },
+  { code: 'fr', flag: toAbsoluteUrl('/media/flags/france.svg'), label: 'Français' },
 ];
 
 export function SidebarDefaultHeader({ onSwitchToWorkspace }: SidebarDefaultHeaderProps) {
   const { sidebarCollapse, setSidebarCollapse } = useLayout();
   const { theme, setTheme } = useTheme();
-    const navigate = useNavigate();
-    const { logout } = useAuth();
-    const handleSettings   = useCallback(() => navigate('/settings/'), [navigate]);
-    const handleSignOut = useCallback(() => {
-        logout();
-    }, [logout]);
-    const { t, language, setLanguage } = useTranslation();
-    const currentLang = LANGUAGE_OPTIONS.find(l => l.code === language);
-    const { workspaces, currentWorkspace, switchWorkspace } = useWorkspaces();
+  const navigate = useNavigate();
+  const { logout } = useAuth();
+  const handleSettings = useCallback(() => navigate('/settings/'), [navigate]);
+  const handleSignOut = useCallback(() => {
+    logout();
+  }, [logout]);
+  const { t, language, setLanguage } = useTranslation();
+  const currentLang = LANGUAGE_OPTIONS.find(l => l.code === language);
+  const { workspaces, currentWorkspace, switchWorkspace, config, updateConfig } = useWorkspaces();
+
+  // Sync language and theme from backend config when workspace config changes
+  useEffect(() => {
+    if (config?.language) setLanguage(config.language as Language);
+    if (config?.theme) setTheme(config.theme);
+  }, [config?.workspace_id, config?.language, config?.theme]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const handleLanguageChange = useCallback((langCode: string) => {
+    setLanguage(langCode as Language);
+    if (currentWorkspace?.id) {
+      updateConfig({ id: currentWorkspace.id, language: langCode, theme });
+    }
+  }, [currentWorkspace?.id, theme, setLanguage, updateConfig]);
+
+  const handleThemeChange = useCallback((newTheme: string) => {
+    setTheme(newTheme);
+    if (currentWorkspace?.id) {
+      updateConfig({ id: currentWorkspace.id, language, theme: newTheme });
+    }
+  }, [currentWorkspace?.id, language, setTheme, updateConfig]);
 
   return (
     <div className="group flex justify-between items-center gap-2.5 border-b border-border h-11 lg:h-(--sidebar-header-height) shrink-0 px-2.5">
@@ -80,9 +101,12 @@ export function SidebarDefaultHeader({ onSwitchToWorkspace }: SidebarDefaultHead
               variant="ghost"
               className="flex items-center justify-between gap-2.5 px-1.5 hover:bg-accent -ms-0.5"
             >
-              <span className={cn("rounded-md text-white text-sm shrink-0 size-6 flex items-center justify-center", currentWorkspace ? getWorkspaceColor(currentWorkspace.id) : "bg-emerald-500")}>
-                {currentWorkspace?.name[0] || 'S'}
-              </span>
+              <Avatar className="size-6 rounded-md shrink-0 border border-border shadow-sm">
+                <AvatarImage src={currentWorkspace?.logo_url || ''} className="object-cover" />
+                <AvatarFallback className={cn("text-white text-[10px] font-bold rounded-md", currentWorkspace ? getWorkspaceColor(currentWorkspace.id) : "bg-emerald-500")}>
+                  {currentWorkspace?.name[0] || 'S'}
+                </AvatarFallback>
+              </Avatar>
               <span className="text-foreground text-sm font-medium in-data-[sidebar-collapsed]:hidden truncate max-w-[100px]">
                 {currentWorkspace?.name || 'Studio'}
               </span>
@@ -107,51 +131,51 @@ export function SidebarDefaultHeader({ onSwitchToWorkspace }: SidebarDefaultHead
                 <Settings className="size-4" />
                 <span>{t('layout.sidebar.settings')}</span>
               </DropdownMenuItem>
-                <DropdownMenuSub>
-                    <DropdownMenuSubTrigger className="flex items-center gap-2 [&_[data-slot=dropdown-menu-sub-trigger-indicator]]:hidden hover:[&_[data-slot=badge]]:border-input data-[state=open]:[&_[data-slot=badge]]:border-input">
-                        <Globe />
-                        <span className="flex items-center justify-between gap-2 grow relative">
-                          {t('layout.sidebar.language')}
-                          <Badge
-                              variant="outline"
-                              className="absolute end-0 top-1/2 -translate-y-1/2"
-                          >
-                            {currentLang?.label}
-                              <img
-                                  src={currentLang?.flag}
-                                  className="w-3.5 h-3.5 rounded-full"
-                                  alt={currentLang?.label}
-                              />
-                          </Badge>
-                        </span>
-                    </DropdownMenuSubTrigger>
-                    <DropdownMenuSubContent className="w-48">
-                        <DropdownMenuRadioGroup
-                            value={currentLang?.code}
-                            onValueChange={(value) => {
-                                const selectedLang = LANGUAGE_OPTIONS.find(
-                                    (lang) => lang.code === value,
-                                );
-                                if (selectedLang) setLanguage(selectedLang.code);
-                            }}
-                        >
-                            {LANGUAGE_OPTIONS.map((item) => (
-                                <DropdownMenuRadioItem
-                                    key={item.code}
-                                    value={item.code}
-                                    className="flex items-center gap-2"
-                                >
-                                    <img
-                                        src={item.flag}
-                                        className="w-4 h-4 rounded-full"
-                                        alt={item.label}
-                                    />
-                                    <span>{item.label}</span>
-                                </DropdownMenuRadioItem>
-                            ))}
-                        </DropdownMenuRadioGroup>
-                    </DropdownMenuSubContent>
-                </DropdownMenuSub>
+              <DropdownMenuSub>
+                <DropdownMenuSubTrigger className="flex items-center gap-2 [&_[data-slot=dropdown-menu-sub-trigger-indicator]]:hidden hover:[&_[data-slot=badge]]:border-input data-[state=open]:[&_[data-slot=badge]]:border-input">
+                  <Globe />
+                  <span className="flex items-center justify-between gap-2 grow relative">
+                    {t('layout.sidebar.language')}
+                    <Badge
+                      variant="outline"
+                      className="absolute end-0 top-1/2 -translate-y-1/2"
+                    >
+                      {currentLang?.label}
+                      <img
+                        src={currentLang?.flag}
+                        className="w-3.5 h-3.5 rounded-full"
+                        alt={currentLang?.label}
+                      />
+                    </Badge>
+                  </span>
+                </DropdownMenuSubTrigger>
+                <DropdownMenuSubContent className="w-48">
+                  <DropdownMenuRadioGroup
+                    value={currentLang?.code}
+                    onValueChange={(value) => {
+                      const selectedLang = LANGUAGE_OPTIONS.find(
+                        (lang) => lang.code === value,
+                      );
+                      if (selectedLang) handleLanguageChange(selectedLang.code);
+                    }}
+                  >
+                    {LANGUAGE_OPTIONS.map((item) => (
+                      <DropdownMenuRadioItem
+                        key={item.code}
+                        value={item.code}
+                        className="flex items-center gap-2"
+                      >
+                        <img
+                          src={item.flag}
+                          className="w-4 h-4 rounded-full"
+                          alt={item.label}
+                        />
+                        <span>{item.label}</span>
+                      </DropdownMenuRadioItem>
+                    ))}
+                  </DropdownMenuRadioGroup>
+                </DropdownMenuSubContent>
+              </DropdownMenuSub>
               <DropdownMenuItem>
                 <Crown className="size-4" />
                 <span>{t('layout.sidebar.upgrade')}</span>
@@ -173,14 +197,15 @@ export function SidebarDefaultHeader({ onSwitchToWorkspace }: SidebarDefaultHead
                   onClick={() => switchWorkspace(workspace.id)}
                 >
                   <div className="flex items-center gap-2">
-                    <span
-                      className={cn(
-                        'rounded-md text-white text-xs uppercase shrink-0 size-5 flex items-center justify-center',
+                    <Avatar className="size-5 rounded-md shrink-0 border border-border mt-0.5">
+                      <AvatarImage src={workspace.logo_url || ''} className="object-cover" />
+                      <AvatarFallback className={cn(
+                        'text-white text-[10px] font-bold uppercase rounded-md',
                         getWorkspaceColor(workspace.id),
-                      )}
-                    >
-                      {workspace.name[0]}
-                    </span>
+                      )}>
+                        {workspace.name[0]}
+                      </AvatarFallback>
+                    </Avatar>
                     <span className="truncate">{workspace.name}</span>
                   </div>
                   <div className="flex items-center gap-2">
@@ -202,7 +227,7 @@ export function SidebarDefaultHeader({ onSwitchToWorkspace }: SidebarDefaultHead
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem
-              onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+              onClick={() => handleThemeChange(theme === 'dark' ? 'light' : 'dark')}
             >
               {theme === 'dark' ? (
                 <Sun className="size-4" />
