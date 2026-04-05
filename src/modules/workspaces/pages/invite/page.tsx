@@ -1,12 +1,14 @@
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from '@/hooks/useTranslation';
+import { useAuth } from '@/hooks/use-auth';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ScreenLoader } from '@/components/screen-loader';
 import api from '@/lib/api';
 import { toast } from 'sonner';
+import { useEffect } from 'react';
 
 interface InvitePreview {
   id: string;
@@ -20,7 +22,15 @@ export default function WorkspaceInvitePage() {
   const { token } = useParams<{ token: string }>();
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const location = useLocation();
   const queryClient = useQueryClient();
+  const { user, isLoading: isAuthLoading } = useAuth();
+
+  useEffect(() => {
+    if (!isAuthLoading && !user) {
+      navigate(`/auth/registration?return_to=${encodeURIComponent(location.pathname)}`, { replace: true });
+    }
+  }, [user, isAuthLoading, navigate, location.pathname]);
 
   const { data: invite, isLoading, isError } = useQuery<InvitePreview>({
     queryKey: ['workspace-invite', token],
@@ -46,7 +56,7 @@ export default function WorkspaceInvitePage() {
     },
   });
 
-  if (isLoading) return <ScreenLoader />;
+  if (isLoading || isAuthLoading) return <ScreenLoader />;
   if (isError || !invite) {
     return (
       <div className="flex min-h-screen items-center justify-center p-4">

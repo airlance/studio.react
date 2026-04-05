@@ -8,8 +8,10 @@ import {
 } from '@/components/ui/tooltip';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useLayout } from './layout-context';
+import { useState } from 'react';
+import { InviteModal } from './invite-modal';
 
-function DefaultContent() {
+function DefaultContent({ onInvite }: { onInvite: () => void }) {
   const { t } = useTranslation();
 
   return (
@@ -17,6 +19,7 @@ function DefaultContent() {
       <Button
         variant="ghost"
         className="grow shrink-0 transition-all duration-200 ease-in-out"
+        onClick={onInvite}
       >
         <UserRoundPlus />
         <span>{t('layout.sidebar.invite')}</span>
@@ -33,14 +36,14 @@ function DefaultContent() {
   );
 }
 
-function CollapsedContent() {
+function CollapsedContent({ onInvite }: { onInvite: () => void }) {
   const { t } = useTranslation();
 
   return (
     <div className="shrink-0 border-t border-border flex flex-col items-center justify-center gap-(--sidebar-space-x) h-(--sidebar-footer-collapsed-height)">
       <Tooltip delayDuration={500}>
         <TooltipTrigger asChild>
-          <Button variant="ghost" size="icon" className="size-7 shrink-0">
+          <Button variant="ghost" size="icon" className="size-7 shrink-0" onClick={onInvite}>
             <UserRoundPlus />
           </Button>
         </TooltipTrigger>
@@ -64,6 +67,16 @@ function CollapsedContent() {
 
 export function SidebarDefaultFooter() {
   const { sidebarCollapse } = useLayout();
+  const [inviteOpen, setInviteOpen] = useState(false);
 
-  return <>{sidebarCollapse ? <CollapsedContent /> : <DefaultContent />}</>;
+  return (
+    <>
+      {sidebarCollapse ? (
+        <CollapsedContent onInvite={() => setInviteOpen(true)} />
+      ) : (
+        <DefaultContent onInvite={() => setInviteOpen(true)} />
+      )}
+      <InviteModal open={inviteOpen} onOpenChange={setInviteOpen} />
+    </>
+  );
 }

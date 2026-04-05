@@ -20,6 +20,15 @@ export interface WorkspaceConfig {
     is_current: boolean;
 }
 
+export interface WorkspaceInvite {
+    token: string;
+    workspace_id: string;
+    email: string;
+    role: string;
+    expires_at: string;
+    created_at: string;
+}
+
 export const useWorkspaces = () => {
     const queryClient = useQueryClient();
 
@@ -94,6 +103,28 @@ export const useWorkspaces = () => {
         },
     });
 
+    const inviteUserMutation = useMutation({
+        mutationFn: async ({ workspaceId, email, role, sendEmail }: { workspaceId: string; email: string; role: string; sendEmail: boolean }) => {
+            const { data } = await api.post<WorkspaceInvite>(`/workspaces/${workspaceId}/invites`, { email, role, send_email: sendEmail });
+            return data;
+        },
+        onSuccess: (_, { workspaceId }) => {
+            queryClient.invalidateQueries({ queryKey: ['workspaces', workspaceId, 'invites'] });
+        },
+    });
+
+    const useInvites = (workspaceId?: string) => {
+        return useQuery({
+            queryKey: ['workspaces', workspaceId, 'invites'],
+            queryFn: async () => {
+                if (!workspaceId) return [];
+                const { data } = await api.get<WorkspaceInvite[]>(`/workspaces/${workspaceId}/invites`);
+                return data;
+            },
+            enabled: !!workspaceId,
+        });
+    };
+
     return {
         workspaces: workspacesQuery.data || [],
         currentWorkspace: currentWorkspaceQuery.data,
@@ -105,5 +136,7 @@ export const useWorkspaces = () => {
         createWorkspace: createWorkspaceMutation,
         updateWorkspace: updateWorkspaceMutation,
         updateConfig: updateConfigMutation.mutate,
+        inviteUser: inviteUserMutation,
+        useInvites,
     };
 };

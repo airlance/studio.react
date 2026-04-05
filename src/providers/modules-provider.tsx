@@ -19,11 +19,20 @@ const ErrorModule = lazy(() => import('@/modules/errors'));
 const AuthModule = lazy(() => import('@/modules/auth'));
 const OnboardingModule = lazy(() => import('@/modules/onboarding'));
 const WorkspacesModule = lazy(() => import('@/modules/workspaces'));
+const WorkspaceInvitePage = lazy(() => import('@/modules/workspaces/pages/invite/page'));
 
 export function ModulesProvider() {
     return (
         <Routes>
             <Route path="/" element={<Navigate to="/dashboard" replace />} />
+            <Route
+                path="/invites/:token"
+                element={
+                    <Suspense fallback={<ScreenLoader />}>
+                        <WorkspaceInvitePage />
+                    </Suspense>
+                }
+            />
             <Route
                 path="/auth/*"
                 element={

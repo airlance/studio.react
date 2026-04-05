@@ -123,4 +123,21 @@ export interface TranslationDictionary {
     'onboarding.workspace.invitationTitle': string;
     'onboarding.workspace.invitationDescription': string;
     'onboarding.workspace.accept': string;
+
+    'layout.invite.title': string;
+    'layout.invite.email': string;
+    'layout.invite.role': string;
+    'layout.invite.sendEmail': string;
+    'layout.invite.send': string;
+    'layout.invite.role.admin': string;
+    'layout.invite.role.member': string;
+    'layout.invite.success': string;
+    'layout.invites.title': string;
+    'layout.invites.empty': string;
+    'layout.invites.column.email': string;
+    'layout.invites.column.role': string;
+    'layout.invites.column.status': string;
+    'layout.invites.column.createdAt': string;
+    'layout.invites.status.active': string;
+    'layout.invites.status.expired': string;
 }

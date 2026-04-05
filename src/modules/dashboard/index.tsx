@@ -7,22 +7,24 @@ import { Dashboard } from './pages/dashboard/page';
 import { DealsPage } from './pages/deals/page';
 import { NotesPage } from './pages/notes/page';
 import { TasksPage } from './pages/tasks/page';
+import { InvitesPage } from './pages/invites/page';
 
 export default function DashboardModule() {
-    return (
-        <Routes>
-            <Route element={<DefaultLayout />}>
-                <Route index element={<Navigate to="dashboard" replace />} />
-                <Route path="dashboard" element={<Dashboard />} />
-                <Route path="tasks/" element={<TasksPage />} />
-                <Route path="notes/" element={<NotesPage />} />
-                <Route path="companies/" element={<CompaniesListPage />} />
-                <Route path="company/" element={<CompanyPage />} />
-                <Route path="companies/:companyId" element={<CompanyPage />} />
-                <Route path="contacts/" element={<ContactsPage />} />
-                <Route path="contacts/:contactId" element={<CompanyPage />} />
-                <Route path="deals/" element={<DealsPage />} />
-            </Route>
-        </Routes>
-    );
+  return (
+    <Routes>
+      <Route element={<DefaultLayout />}>
+        <Route index element={<Navigate to="dashboard" replace />} />
+        <Route path="dashboard" element={<Dashboard />} />
+        <Route path="tasks/" element={<TasksPage />} />
+        <Route path="notes/" element={<NotesPage />} />
+        <Route path="companies/" element={<CompaniesListPage />} />
+        <Route path="company/" element={<CompanyPage />} />
+        <Route path="companies/:companyId" element={<CompanyPage />} />
+        <Route path="contacts/" element={<ContactsPage />} />
+        <Route path="contacts/:contactId" element={<CompanyPage />} />
+        <Route path="deals/" element={<DealsPage />} />
+        <Route path="invites/" element={<InvitesPage />} />
+      </Route>
+    </Routes>
+  );
 }
