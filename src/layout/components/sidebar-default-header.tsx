@@ -37,34 +37,13 @@ import { useTranslation } from '@/hooks/useTranslation';
 import { toAbsoluteUrl } from '@/lib/helpers';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/hooks/use-auth';
+import { useWorkspaces } from '@/hooks/use-workspaces';
 
-interface Workspace {
-  id: string;
-  name: string;
-  state: string;
-  isCurrent: boolean;
-}
-
-const mockWorkspaces: Workspace[] = [
-  {
-    id: '1',
-    name: 'Keenthemes',
-    state: 'bg-emerald-500',
-    isCurrent: true,
-  },
-  {
-    id: '2',
-    name: 'Studio',
-    state: 'bg-indigo-500',
-    isCurrent: false,
-  },
-  {
-    id: '3',
-    name: 'ReUI',
-    state: 'bg-pink-500',
-    isCurrent: false,
-  },
-];
+const getWorkspaceColor = (id: string) => {
+  const colors = ['bg-emerald-500', 'bg-indigo-500', 'bg-pink-500', 'bg-amber-500', 'bg-blue-500'];
+  const hash = id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  return colors[hash % colors.length];
+};
 
 interface SidebarDefaultHeaderProps {
     onSwitchToWorkspace?: () => void;
@@ -90,6 +69,7 @@ export function SidebarDefaultHeader({ onSwitchToWorkspace }: SidebarDefaultHead
     }, [logout]);
     const { t, language, setLanguage } = useTranslation();
     const currentLang = LANGUAGE_OPTIONS.find(l => l.code === language);
+    const { workspaces, currentWorkspace, switchWorkspace } = useWorkspaces();
 
   return (
     <div className="group flex justify-between items-center gap-2.5 border-b border-border h-11 lg:h-(--sidebar-header-height) shrink-0 px-2.5">
@@ -100,11 +80,11 @@ export function SidebarDefaultHeader({ onSwitchToWorkspace }: SidebarDefaultHead
               variant="ghost"
               className="flex items-center justify-between gap-2.5 px-1.5 hover:bg-accent -ms-0.5"
             >
-              <span className="rounded-md bg-emerald-500 text-white text-sm shrink-0 size-6 flex items-center justify-center">
-                S
+              <span className={cn("rounded-md text-white text-sm shrink-0 size-6 flex items-center justify-center", currentWorkspace ? getWorkspaceColor(currentWorkspace.id) : "bg-emerald-500")}>
+                {currentWorkspace?.name[0] || 'S'}
               </span>
-              <span className="text-foreground text-sm font-medium in-data-[sidebar-collapsed]:hidden">
-                Studio
+              <span className="text-foreground text-sm font-medium in-data-[sidebar-collapsed]:hidden truncate max-w-[100px]">
+                {currentWorkspace?.name || 'Studio'}
               </span>
               <ChevronDown className="size-4 text-muted-foreground in-data-[sidebar-collapsed]:hidden" />
             </Button>
@@ -186,16 +166,17 @@ export function SidebarDefaultHeader({ onSwitchToWorkspace }: SidebarDefaultHead
             <DropdownMenuSeparator />
             <DropdownMenuLabel>{t('layout.sidebar.workspaces')}</DropdownMenuLabel>
             <DropdownMenuGroup>
-              {mockWorkspaces.map((workspace) => (
+              {workspaces.map((workspace) => (
                 <DropdownMenuItem
                   key={workspace.id}
                   className="flex items-center justify-between"
+                  onClick={() => switchWorkspace(workspace.id)}
                 >
                   <div className="flex items-center gap-2">
                     <span
                       className={cn(
                         'rounded-md text-white text-xs uppercase shrink-0 size-5 flex items-center justify-center',
-                        workspace.state,
+                        getWorkspaceColor(workspace.id),
                       )}
                     >
                       {workspace.name[0]}
@@ -203,7 +184,7 @@ export function SidebarDefaultHeader({ onSwitchToWorkspace }: SidebarDefaultHead
                     <span className="truncate">{workspace.name}</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    {workspace.isCurrent && (
+                    {currentWorkspace?.id === workspace.id && (
                       <Check className="size-4 text-primary" />
                     )}
                   </div>

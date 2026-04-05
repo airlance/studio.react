@@ -1,0 +1,52 @@
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import api from '@/lib/api';
+
+export interface Workspace {
+    id: string;
+    name: string;
+    slug: string;
+    description: string;
+    logo_url: string;
+    owner_id: string;
+    created_at: string;
+    updated_at: string;
+}
+
+export const useWorkspaces = () => {
+    const queryClient = useQueryClient();
+
+    const workspacesQuery = useQuery({
+        queryKey: ['workspaces'],
+        queryFn: async () => {
+            const { data } = await api.get<Workspace[]>('/workspaces');
+            return data;
+        },
+    });
+
+    const currentWorkspaceQuery = useQuery({
+        queryKey: ['workspaces', 'current'],
+        queryFn: async () => {
+            const { data } = await api.get<Workspace>('/workspaces/current');
+            return data;
+        },
+    });
+
+    const switchWorkspaceMutation = useMutation({
+        mutationFn: async (id: string) => {
+            await api.post(`/workspaces/current/${id}`);
+        },
+        onSuccess: () => {
+             // Invalidate current workspace to refetch
+            queryClient.invalidateQueries({ queryKey: ['workspaces', 'current'] });
+        },
+    });
+
+    return {
+        workspaces: workspacesQuery.data || [],
+        currentWorkspace: currentWorkspaceQuery.data,
+        isLoading: workspacesQuery.isLoading || currentWorkspaceQuery.isLoading,
+        isError: workspacesQuery.isError || currentWorkspaceQuery.isError,
+        switchWorkspace: switchWorkspaceMutation.mutate,
+        isSwitching: switchWorkspaceMutation.isPending,
+    };
+};
