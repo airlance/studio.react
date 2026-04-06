@@ -1,8 +1,9 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useWorkspaces } from '@/hooks/use-workspaces';
-import { useChat } from '@/hooks/use-chat';
+import { useChat, useMessages } from '@/hooks/use-chat';
 import { useAuth } from '@/hooks/use-auth';
+import { useChatNavigation } from '@/hooks/use-chat-navigation';
 import { ChatSidebar } from '../components/sidebar';
 import { MessageList } from '../components/message-list';
 import { MessageInput } from '../components/message-input';
@@ -13,43 +14,34 @@ export default function ChatPage() {
     const { t } = useTranslation();
     const { currentWorkspace } = useWorkspaces();
     const { user } = useAuth();
-    const { channels, conversations, useMessages, sendMessage } = useChat(currentWorkspace?.id);
+    const { activeChat, navigateToChat } = useChatNavigation();
+    const { channels, conversations, sendMessage } = useChat(currentWorkspace?.id);
 
-    const [activeChat, setActiveChat] = useState<{ id: string; isChannel: boolean } | null>(null);
-
-    const { data: messages = [] } = useMessages(activeChat?.id);
+    // useMessages is now a top-level hook — no rules-of-hooks violation
+    const { data: messages = [] } = useMessages(currentWorkspace?.id, activeChat?.id);
 
     const handleSelect = useCallback((id: string, isChannel: boolean) => {
-        setActiveChat({ id, isChannel });
-    }, []);
+        navigateToChat(id, isChannel);
+    }, [navigateToChat]);
 
     const handleSend = useCallback(async (content: string) => {
         if (!activeChat) return;
-        try {
-            await sendMessage.mutateAsync({
-                targetId: activeChat.id,
-                input: {
-                    content,
-                    is_channel: activeChat.isChannel,
-                },
-            });
-        } catch (err) {
-            console.error('Failed to send message', err);
-        }
+        await sendMessage.mutateAsync({
+            targetId: activeChat.id,
+            input: { content, is_channel: activeChat.isChannel },
+        });
     }, [activeChat, sendMessage]);
 
     const activeTitle = useMemo(() => {
         if (!activeChat) return '';
         if (activeChat.isChannel) {
-            const channel = channels.find(c => c.id === activeChat.id);
-            return channel?.name || '';
-        } else {
-            // For DMs, find the other user's name
-            const conv = conversations.find(c => c.id === activeChat.id);
-            if (!conv) return '';
-            const otherUserId = conv.user1_id === user?.id ? conv.user2_id : conv.user1_id;
-            return otherUserId; // In a real app, resolve this to a full name
+            return channels.find(c => c.id === activeChat.id)?.name ?? '';
         }
+        const conv = conversations.find(c => c.id === activeChat.id);
+        if (!conv) return '';
+        // Resolve name via members in MessageList / sidebar — for header use other user id as fallback
+        const otherUserId = conv.user1_id === user?.id ? conv.user2_id : conv.user1_id;
+        return otherUserId;
     }, [activeChat, channels, conversations, user?.id]);
 
     return (
@@ -67,20 +59,19 @@ export default function ChatPage() {
                 {activeChat ? (
                     <>
                         <div className="h-14 flex items-center px-6 border-b bg-background font-semibold">
-                            {activeChat.isChannel ? (
-                                <Hash className="mr-2 h-4 w-4 opacity-70" />
-                            ) : (
-                                <MessageSquare className="mr-2 h-4 w-4 opacity-70" />
-                            )}
+                            {activeChat.isChannel
+                                ? <Hash className="mr-2 h-4 w-4 opacity-70" />
+                                : <MessageSquare className="mr-2 h-4 w-4 opacity-70" />
+                            }
                             {activeTitle}
                         </div>
-                        <MessageList 
-                            workspaceId={currentWorkspace?.id || ''} 
-                            messages={messages} 
+                        <MessageList
+                            workspaceId={currentWorkspace?.id ?? ''}
+                            messages={messages}
                         />
-                        <MessageInput 
-                            onSend={handleSend} 
-                            disabled={sendMessage.isPending} 
+                        <MessageInput
+                            onSend={handleSend}
+                            disabled={sendMessage.isPending}
                         />
                     </>
                 ) : (
