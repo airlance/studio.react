@@ -1,6 +1,7 @@
 import { useTranslation } from '@/hooks/useTranslation';
 import { useWorkspaces } from '@/hooks/use-workspaces';
 import { useMembers } from '@/hooks/use-members';
+import { usePresence } from '@/hooks/use-presence';
 import { Button } from '@/components/ui/button';
 import {
   Table,
@@ -47,6 +48,7 @@ export default function MembersPage() {
   const { t } = useTranslation();
   const { currentWorkspace, inviteUser, resendInvite, revokeInvite, useInvites } = useWorkspaces();
   const { members, removeMember } = useMembers(currentWorkspace?.id);
+  const { isOnline } = usePresence();
   const { data: invites = [] } = useInvites(currentWorkspace?.id);
 
   const [settingsSheetOpen, setSettingsSheetOpen] = useState(false);
@@ -174,12 +176,17 @@ export default function MembersPage() {
                                 {members.map((member) => (
                                     <TableRow key={member.user_id}>
                                         <TableCell className="flex items-center gap-3">
-                                            <Avatar className="h-8 w-8">
-                                                <AvatarImage src={member.avatar_url} />
-                                                <AvatarFallback className="uppercase">
-                                                    {member.first_name?.[0]}{member.last_name?.[0]}
-                                                </AvatarFallback>
-                                            </Avatar>
+                                            <div className="relative">
+                                                <Avatar className="h-8 w-8">
+                                                    <AvatarImage src={member.avatar_url} />
+                                                    <AvatarFallback className="uppercase">
+                                                        {member.first_name?.[0]}{member.last_name?.[0]}
+                                                    </AvatarFallback>
+                                                </Avatar>
+                                                {isOnline(member.user_id) && (
+                                                    <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-background bg-green-500" />
+                                                )}
+                                            </div>
                                             <div className="flex flex-col">
                       <span className="font-medium">
                         {member.first_name} {member.last_name}

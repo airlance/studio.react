@@ -38,11 +38,15 @@ src/
 │   ├── fields/                     # Custom fields management
 │   ├── forms/                      # Forms & surveys module
 │   ├── contacts/                   # CRM & contacts management
+│   ├── chat/                       # Real-time chat module
 │   └── ...                         # Other feature modules (tags, storage, etc.)
 ├── components/
 │   ├── ui/                         # shadcn/ui shared primitives (radix based)
 │   └── ...                         # Shared, generic components (e.g. screen-loader)
-├── providers/                      # Global context providers (modules-provider.tsx)
+├── providers/                      # Global context providers
+│   ├── auth/                       # AuthContext & AuthProvider
+│   ├── presence/                   # PresenceContext & PresenceProvider (Chat real-time)
+│   └── modules-provider.tsx        # Module routing
 ├── layout/                         # App shell, sidebar, navigation
 ├── styles/                         # Global styles (index.css)
 ├── config/                         # Global configs (i18n, fonts, social, etc.)
@@ -107,7 +111,11 @@ export function useTranslation() { … }
 ```
 
 The same rule applies to any future context + hook pair (e.g. theme, auth,
-feature flags). Always split them.
+feature flags, presence). Always split them.
+
+- **Real-time Presence & Chat**: Managed by `PresenceProvider`. Use the `usePresence` hook to listen to generic events or `useChat` for messaging logic.
+- **Location**: `src/providers/presence/presence-provider.tsx`, `src/hooks/use-presence.ts`, `src/hooks/use-chat.ts`.
+- **Heartbeat & Reconnect**: Handled automatically by `PresenceProvider`.
 
 ### Modular Architecture
 - **Module Isolation**: Modules should be self-contained. Avoid importing components or internal logic from other modules. If logic is shared, lift it to `src/hooks`, `src/utils`, or `src/providers`.

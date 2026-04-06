@@ -60,13 +60,19 @@ const RegistrationPage = () => {
     if (isAuthLoading) return null;
 
     if (!flow && !user) {
+        const isInvite = returnTo.includes('/invites/');
+
         return (
             <div className="flex h-screen items-center justify-center p-4">
                 <Card className="w-full max-w-md">
                     <CardHeader>
-                        <CardTitle className="text-2xl">Check your email</CardTitle>
+                        <CardTitle className="text-2xl">
+                            {isInvite ? 'Almost there!' : 'Check your email'}
+                        </CardTitle>
                         <CardDescription>
-                            We've sent you a verification link. Please check your inbox and follow the instructions to complete your registration.
+                            {isInvite 
+                                ? "Please check your email to verify your account. After verification, you'll be redirected back to accept your workspace invitation."
+                                : "We've sent you a verification link. Please check your inbox and follow the instructions to complete your registration."}
                         </CardDescription>
                     </CardHeader>
                     <CardContent>

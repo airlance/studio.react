@@ -6,6 +6,7 @@ import { Toaster } from '@/components/ui/sonner';
 import { HelmetProvider } from '@packages/react-helmet-async';
 import { TranslationProvider } from '@/config/i18n/context';
 import { AuthProvider } from '@/providers/auth/auth-provider';
+import { PresenceProvider } from '@/providers/presence/presence-provider';
 import { ModulesProvider } from './providers/modules-provider';
 
 const queryClient = new QueryClient();
@@ -27,7 +28,9 @@ const App = () => (
                         <BrowserRouter basename={BASE_URL}>
                             <Toaster />
                             <AuthProvider>
-                                <ModulesProvider />
+                                <PresenceProvider>
+                                    <ModulesProvider />
+                                </PresenceProvider>
                             </AuthProvider>
                         </BrowserRouter>
                     </QueryClientProvider>

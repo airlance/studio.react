@@ -38,6 +38,9 @@ export interface TranslationDictionary {
     'layout.sidebar.help': string;
     'layout.sidebar.inviteTooltip': string;
     'layout.sidebar.helpTooltip': string;
+    'layout.sidebar.chat': string;
+    'common.create': string;
+    'common.noResults': string;
 
     'layout.nav.tasks': string;
     'layout.nav.addTask': string;
@@ -86,6 +89,19 @@ export interface TranslationDictionary {
     'layout.chat.joinMeta': string;
     'layout.chat.placeholder': string;
     'layout.chat.send': string;
+    'chat.channels': string;
+    'chat.directMessages': string;
+    'chat.typeMessage': string;
+    'chat.welcome': string;
+    'chat.selectChannel': string;
+    'chat.createChannel': string;
+    'chat.channelName': string;
+    'chat.description': string;
+    'chat.privateChannel': string;
+    'chat.selectMembers': string;
+    'chat.directMessage': string;
+    'chat.searchMembers': string;
+    'chat.members': string;
 
     'layout.secondaryHeader.workspace': string;
     'layout.workspace.backToCrm': string;

@@ -19,6 +19,7 @@ const ErrorModule = lazy(() => import('@/modules/errors'));
 const AuthModule = lazy(() => import('@/modules/auth'));
 const OnboardingModule = lazy(() => import('@/modules/onboarding'));
 const WorkspacesModule = lazy(() => import('@/modules/workspaces'));
+const ChatModule = lazy(() => import('@/modules/chat'));
 const WorkspaceInvitePage = lazy(() => import('@/modules/workspaces/pages/invite/page'));
 
 export function ModulesProvider() {
@@ -157,6 +158,16 @@ export function ModulesProvider() {
                     <Suspense fallback={<ScreenLoader />}>
                         <ProtectedRoute>
                             <SettingsModule />
+                        </ProtectedRoute>
+                    </Suspense>
+                }
+            />
+            <Route
+                path="/chat/*"
+                element={
+                    <Suspense fallback={<ScreenLoader />}>
+                        <ProtectedRoute>
+                            <ChatModule />
                         </ProtectedRoute>
                     </Suspense>
                 }
